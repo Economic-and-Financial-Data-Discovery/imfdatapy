@@ -15,6 +15,11 @@ install_imf:
 	python -m ipykernel install --user --name=imfdatapy
 	pip install -e .
 
+_uml:
+	pyreverse -k src/imfdatapy/imf.py -o png
+	mv classes.png docs/imfdatapy_classes.png
+
+
 doc_html:
 	sphinx-build -b html doc doc/build
 

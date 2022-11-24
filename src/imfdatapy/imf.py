@@ -470,6 +470,3 @@ class GFSR(IMF):
     def __init__(self, series='GFSR', search_terms=None, countries=None, period='A',
                  start_date="2000-01-01", end_date="2022-10-20"):
         super().__init__(series=series, search_terms=search_terms, countries=countries, period=period, start_date=start_date, end_date=end_date)
-
-
-# TODO SC add OO figure
