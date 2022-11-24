@@ -168,11 +168,15 @@ class IMF(Series):
         # searches through series:
         key = 'Dataflow'  # Method with series information
         search_term = self.series  # Term to find in series names
-        series_list = requests.get(f'{self.url}{key}').json()['Structure']['Dataflows']['Dataflow']
-        # find all series names
-        self.series_df = pd.json_normalize(series_list)
-        self.series_df = self.series_df.sort_values("KeyFamilyRef.KeyFamilyID")
-        self.output_series()
+        rq = self.repeat_request(url=f'{self.url}{key}')
+        if rq.status_code == 200:
+            series_list = rq.json()['Structure']['Dataflows']['Dataflow']
+            # find all series names
+            self.series_df = pd.json_normalize(series_list)
+            self.series_df = self.series_df.sort_values("KeyFamilyRef.KeyFamilyID")
+            self.output_series()
+        else:
+            logging.warning(f"Failed to download series.")
 
         # Filter series names
         self.series_df["search_found"] = False
@@ -208,29 +212,38 @@ class IMF(Series):
         # finds the dimensions in the series. We need the indicators.
         des_list, id_list = [], []
         key = f'DataStructure/{self.series}'  # DataStructure Method / series
-        dimension_list = requests.get(f'{self.url}{key}').json()['Structure']['KeyFamilies']['KeyFamily']['Components']['Dimension']
-        self.dim_df = pd.json_normalize(dimension_list)
+        rq = self.repeat_request(url=f'{self.url}{key}')
+        if rq.status_code == 200:
+            dimension_list = rq.json()['Structure']['KeyFamilies']['KeyFamily']['Components']['Dimension']
+            self.dim_df = pd.json_normalize(dimension_list)
 
-        # finds the indicators by the search words:
-        for n, dimension in enumerate(dimension_list):
-            des_list.extend([n + 1])
-            id_list.extend([dimension['@codelist']])
-            logging.debug(f"Dimension {n + 1}: {dimension['@codelist']}")
-        self.dim_meta_df = pd.DataFrame(list(zip(des_list, id_list)), columns=['Dimension', 'ID'])
-        self.dim_meta_df = self.dim_meta_df.sort_values("Dimension")
+            # finds the indicators by the search words:
+            for n, dimension in enumerate(dimension_list):
+                des_list.extend([n + 1])
+                id_list.extend([dimension['@codelist']])
+                logging.debug(f"Dimension {n + 1}: {dimension['@codelist']}")
+            self.dim_meta_df = pd.DataFrame(list(zip(des_list, id_list)), columns=['Dimension', 'ID'])
+            self.dim_meta_df = self.dim_meta_df.sort_values("Dimension")
 
-        for n in range(0, len(dimension_list)):
-            try:
-                dim_name = dimension_list[n]['@codelist']
-                key = f"CodeList/{dim_name}"
-                code_list = requests.get(f'{self.url}{key}').json()['Structure']['CodeLists']['CodeList']['Code']
-                code_df = pd.json_normalize(code_list)
-                self.dim_dict[dim_name] = code_df
-                logging.debug(f"Dimension {dim_name} details: \n{code_df}")
-            except:
-                logging.error(f"Cannot extract dimension {dim_name} details.")
+            for n in range(0, len(dimension_list)):
+                try:
+                    dim_name = dimension_list[n]['@codelist']
+                    key = f"CodeList/{dim_name}"
+                    rq = self.repeat_request(url=f'{self.url}{key}')
+                    if rq.status_code == 200:
+                        code_list = rq.json()['Structure']['CodeLists']['CodeList']['Code']
+                        code_df = pd.json_normalize(code_list)
+                        self.dim_dict[dim_name] = code_df
+                        logging.debug(f"Dimension {dim_name} details: \n{code_df}")
+                    else:
+                        logging.warning(f"Failed to download {dim_name}.")
+                except:
+                    logging.error(f"Cannot extract dimension {dim_name} details.")
 
-        self.output_dim("")
+            self.output_dim("")
+        else:
+            logging.warning(f"Failed to download dimensions.")
+
         return des_list, dimension_list, id_list
 
     def download_meta(self, des_list, dimension_list, id_list):
@@ -252,27 +265,32 @@ class IMF(Series):
 
         # finds the indicators by the search words
         key = f"CodeList/{dimension_list[2]['@codelist']}"
-        code_list = requests.get(f'{self.url}{key}').json()['Structure']['CodeLists']['CodeList']['Code']
-        self.meta_df = pd.json_normalize(code_list)
-        self.output_meta()
+        rq = self.repeat_request(url=f'{self.url}{key}')
+        if rq.status_code == 200:
+            code_list = rq.json()['Structure']['CodeLists']['CodeList']['Code']
+            self.meta_df = pd.json_normalize(code_list)
+            self.output_meta()
 
-        self.meta_df["search_found"] = False
-        string_columns = self.meta_df.select_dtypes(include=object).columns
-        for col, search_term in itertools.product(string_columns, self.search_terms):
-            logging.debug(f"{col = }, {search_term = }")
-            self.meta_df["search_found"] = self.meta_df["search_found"] | self.meta_df[col].str.lower().str.contains(
-                search_term.lower())
-            logging.debug(self.meta_df["search_found"].describe())
-            logging.debug(self.meta_df[self.meta_df["search_found"]])
-        self.meta_df = self.meta_df[self.meta_df["search_found"]]
-        self.meta_df = self.meta_df.drop(['search_found'], axis=1)
+            self.meta_df["search_found"] = False
+            string_columns = self.meta_df.select_dtypes(include=object).columns
+            for col, search_term in itertools.product(string_columns, self.search_terms):
+                logging.debug(f"{col = }, {search_term = }")
+                self.meta_df["search_found"] = self.meta_df["search_found"] | self.meta_df[col].str.lower().str.contains(
+                    search_term.lower())
+                logging.debug(self.meta_df["search_found"].describe())
+                logging.debug(self.meta_df[self.meta_df["search_found"]])
+            self.meta_df = self.meta_df[self.meta_df["search_found"]]
+            self.meta_df = self.meta_df.drop(['search_found'], axis=1)
 
-        if "ID" not in self.meta_df.columns:
-            self.meta_df.columns = ["ID", *list(self.meta_df.columns)[1:]]
-        if "Description" not in self.meta_df.columns:
-            self.meta_df.columns = [*list(self.meta_df.columns)[:-1], "Description"]
-        logging.info(f"{self.meta_df.shape = }")
-        self.output_meta(indicator="")
+            if "ID" not in self.meta_df.columns:
+                self.meta_df.columns = ["ID", *list(self.meta_df.columns)[1:]]
+            if "Description" not in self.meta_df.columns:
+                self.meta_df.columns = [*list(self.meta_df.columns)[:-1], "Description"]
+            logging.info(f"{self.meta_df.shape = }")
+            self.output_meta(indicator="")
+        else:
+            logging.warning(f"Failed to download meta data.")
+
         return self.meta_df
 
     # overriding abstract method
@@ -294,13 +312,11 @@ class IMF(Series):
         temp = pd.DataFrame()
         for cont in self.countries:
 
-            tm.sleep(1)
-
             # logging.debug("Current country", cont)
             url = f"{base}{self.period}.{cont}.{'+'.join(dcn_sa)}.{time}"
             # url = f"{base}{period}..{'+'.join(dcn_sa)}.{time}"
             # logging.debug('url',url)
-            rq = requests.get(url)
+            rq = self.repeat_request(url)
             # logging.debug('rq',rq)
             if rq.status_code == 200:
                 try:
@@ -375,6 +391,17 @@ class IMF(Series):
         self.output_data(data="")
 
         return self.data_df
+
+    def repeat_request(self, url):
+        MAX_RETRIES = 10
+        for _ in range(MAX_RETRIES):
+            rq = requests.get(url)
+            if rq.status_code == 200:
+                return rq
+
+            tm.sleep(1)
+
+        return rq
 
     # overriding abstract method
     def get_meta(self):
