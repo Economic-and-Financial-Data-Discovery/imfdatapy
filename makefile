@@ -18,6 +18,9 @@ install_imf:
 _uml:
 	pyreverse -k src/imfdatapy/imf.py -o png
 	mv classes.png docs/imfdatapy_classes.png
+	pyreverse src/imfdatapy/imf.py -o png
+	mv classes.png docs/imfdatapy_classes_members.png
+
 
 
 doc_html:
