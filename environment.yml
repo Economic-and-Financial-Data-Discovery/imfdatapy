@@ -1,4 +1,4 @@
-name: imf
+name: imfdatapy
 channels:
   - conda-forge
   - defaults
