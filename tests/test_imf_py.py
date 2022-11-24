@@ -1,5 +1,5 @@
 import unittest
-from imf import *
+from imf_py import *
 
 class MyTestCase(unittest.TestCase):
     def test_something(self):
