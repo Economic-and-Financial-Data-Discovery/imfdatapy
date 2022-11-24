@@ -1,4 +1,4 @@
-# imf_py
+# imfdatapy
 
 A package for data extraction from the International Monetary Fund (IMF)!
 This repository contains Python source code and Jupyter notebooks with examples on how to extract data from the IMF.
@@ -6,7 +6,7 @@ This repository contains Python source code and Jupyter notebooks with examples 
 ## Installation
 
 ```bash
-$ pip install imf_py
+$ pip install imfdatapy
 ```
 
 ## Usage
@@ -19,8 +19,8 @@ Interested in contributing? Check out the contributing guidelines. Please note t
 
 ## License
 
-`imf_py` was created by Irina Klein and Sou-Cheng T. Choi, Illinois Institute of Technology. It is licensed under the terms of the MIT license.
+`imfdatapy` was created by Irina Klein and Sou-Cheng T. Choi, Illinois Institute of Technology. It is licensed under the terms of the MIT license.
 
 ## Credits
 
-`imf_py` was created with [`cookiecutter`](https://cookiecutter.readthedocs.io/en/latest/) and the `py-pkgs-cookiecutter` [template](https://github.com/py-pkgs/py-pkgs-cookiecutter).
+`imfdatapy` was created with [`cookiecutter`](https://cookiecutter.readthedocs.io/en/latest/) and the `py-pkgs-cookiecutter` [template](https://github.com/py-pkgs/py-pkgs-cookiecutter).
