@@ -1,6 +1,6 @@
 """
 Authors: Sou-Cheng Choi and Irina Klein, Illinois Institute of Technology
-Updated Date: Nov 6, 2022
+Updated Date: Nov 24, 2022
 Creation Date: Jun 15, 2022
 """
 from abc import ABC, abstractmethod
@@ -10,13 +10,13 @@ from os import path
 import time as tm
 
 import pandas as pd
-import os
+
 import logging
 import logging.config
 import requests
 import itertools
 
-
+# Create logger TODO add filename and line number
 log_file_path = path.join(path.dirname(path.abspath(__file__)), 'logging.conf')
 logging.config.fileConfig(log_file_path, disable_existing_loggers=False)
 logger = logging.getLogger(__name__)
@@ -53,7 +53,13 @@ class Series(ABC):
         self.data_df = pd.DataFrame()
         self.dim_dict = {}
 
+        self._max_requests = 10
+        self._sleep_sec = 1
+
     def get_series_names(self):
+        """
+        TODO
+        """
         pass
 
     @abstractmethod
@@ -112,9 +118,7 @@ class IMF(Series):
 
         """
         # output to csv file
-        if dim_name is None:
-            outfile_path = f"../out/dim.csv"
-        else:
+        if dim_name is not None:
             for key in self.dim_dict.keys():
                 outfile_path = f"../out/dim_{key.lower()}.csv"
                 self.dim_dict[key].to_csv(outfile_path, index=False)
@@ -167,7 +171,7 @@ class IMF(Series):
         """
         # searches through series:
         key = 'Dataflow'  # Method with series information
-        search_term = self.series  # Term to find in series names
+        search_terms = self.series  # Term to find in series names
         rq = self.repeat_request(url=f'{self.url}{key}')
         if rq.status_code == 200:
             series_list = rq.json()['Structure']['Dataflows']['Dataflow']
@@ -181,7 +185,7 @@ class IMF(Series):
         # Filter series names
         self.series_df["search_found"] = False
         string_columns = self.series_df.select_dtypes(include=object).columns
-        for col, search_term in itertools.product(string_columns, [self.series]):
+        for col, search_term in itertools.product(string_columns, [search_terms]):
             logging.debug(f"{col = }, {search_term = }")
             self.series_df["search_found"] = self.series_df["search_found"] | self.series_df[col].str.lower().str.contains(
                 search_term.lower())
@@ -393,13 +397,13 @@ class IMF(Series):
         return self.data_df
 
     def repeat_request(self, url):
-        MAX_RETRIES = 10
-        for _ in range(MAX_RETRIES):
+        rq = None
+        for _ in range(self._max_requests):
             rq = requests.get(url)
             if rq.status_code == 200:
                 return rq
 
-            tm.sleep(1)
+            tm.sleep(self._sleep_sec)
 
         return rq
 
@@ -424,7 +428,7 @@ class IMF(Series):
 
         :return: summary of time series data
         """
-        # TODO
+        # TODO groupby countries summary
         return
 
     def describe_meta(self):
@@ -432,49 +436,40 @@ class IMF(Series):
 
         :return: summary of meta data
         """
-        #TODO
-        return
+
+        return self.meta_df.describe(include="all")
+
 
 class IFS(IMF):
     def __init__(self, series='IFS', search_terms=None, countries=None, period='Q',
                  start_date="2000-01-01", end_date="2022-10-20"):
         super().__init__(series=series, search_terms=search_terms, countries=countries, period=period, start_date=start_date, end_date=end_date)
 
+
 class DOT(IMF):
     def __init__(self, series='DOT', search_terms=None, countries=None, period='Q',
                  start_date="2000-01-01", end_date="2022-10-20"):
         super().__init__(series=series, search_terms=search_terms, countries=countries, period=period, start_date=start_date, end_date=end_date)
+
 
 class BOP(IMF):
     def __init__(self, series='BOP', search_terms=None, countries=None, period='Q',
                  start_date="2000-01-01", end_date="2022-10-20"):
         super().__init__(series=series, search_terms=search_terms, countries=countries, period=period, start_date=start_date, end_date=end_date)
 
+
 class FSI(IMF):
     def __init__(self, series='FSI', search_terms=None, countries=None, period='Q',
                  start_date="2000-01-01", end_date="2022-10-20"):
         super().__init__(series=series, search_terms=search_terms, countries=countries, period=period, start_date=start_date, end_date=end_date)
+
 class GFSR(IMF):
+    """
+    TODO What is GFSR
+    """
     def __init__(self, series='GFSR', search_terms=None, countries=None, period='A',
                  start_date="2000-01-01", end_date="2022-10-20"):
         super().__init__(series=series, search_terms=search_terms, countries=countries, period=period, start_date=start_date, end_date=end_date)
 
 
-
-if __name__ == '__main__':
-    ifs = IMF(search_terms=["gross domestic product, real"], countries=["US"], period='Q', start_date="2000", end_date="2022")
-
-    #ifs = IMF(search_terms=["NGDP_R_SA_XDC"], countries=["CA", "RU"], period='Q', start_date="1970", end_date="2022")
-
-    #ifs = IMF(countries=["US"], period='Q', start_date="2000",  end_date="2022")
-    #ifs = IMF(series="DOT", search_terms=["trade"], countries=["US"], period='Q', start_date="2000",  end_date="2022")
-
-    #ifs = IMF(series="BOP", search_terms=["current account, total, credit"], countries=["US"], period='Q', start_date="2000", end_date="2022")
-
-    # Annual TODO
-    #ifs = IMF(series="GFSR", search_terms=["central government"], countries=["US"], period='A', start_date="2000", end_date="2022")
-
-    #ifs = IMF(series="FSI", search_terms=["Value of large exposures"], countries=["US"], period='A', start_date="2000", end_date="2022")
-
-    data_df = ifs.download_data()
-    meta_df = ifs.get_meta()
+# TODO SC add OO figure

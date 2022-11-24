@@ -18,7 +18,7 @@ class MyTestCase(unittest.TestCase):
         meta_df = ifs.get_meta()
         self.assertGreaterEqual(meta_df.shape[0], 3)
 
-        tm.sleep(1)
+
 
     def test_imf_ifs_eg2(self):
         ifs = IMF(search_terms=["gross Domestic Product, Real"], countries=["CA", "RU"],
@@ -27,7 +27,7 @@ class MyTestCase(unittest.TestCase):
         self.assertGreaterEqual(df.shape[0], 361)
         meta_df = ifs.get_meta()
         self.assertGreaterEqual(meta_df.shape[0], 3)
-        tm.sleep(1)
+
 
     def test_imf_ifs_eg3(self):
         ifs = IMF(countries=["US"], period='Q', start_date="2000", end_date="2022")
@@ -35,7 +35,7 @@ class MyTestCase(unittest.TestCase):
         self.assertGreaterEqual(df.shape[0], 174)
         meta_df = ifs.get_meta()
         self.assertGreaterEqual(meta_df.shape[0], 3)
-        tm.sleep(1)
+
 
     def test_imf_ifs_eg4(self):
         ifs = IFS(countries=["US"], period='Q', start_date="2000", end_date="2022")
@@ -43,7 +43,7 @@ class MyTestCase(unittest.TestCase):
         self.assertGreaterEqual(df.shape[0], 174)
         meta_df = ifs.get_meta()
         self.assertGreaterEqual(meta_df.shape[0], 3)
-        tm.sleep(1)
+
 
 
 if __name__ == '__main__':
