@@ -6,7 +6,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = u"imf_py"
+project = u"imfdatapy"
 copyright = u"2022, Irina Klein, Sou-Cheng Choi"
 author = u"Irina Klein, Sou-Cheng Choi"
 

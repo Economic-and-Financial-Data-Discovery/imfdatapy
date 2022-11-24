@@ -2,6 +2,6 @@
 
 <!--next-version-placeholder-->
 
-## v1 (30/11/2022)
+## v1 (24/11/2022)
 
-- First release of `imf_dd`!
+- First release of `imfdatapy`!

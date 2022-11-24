@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "imf_py"
+name = "imfdatapy"
 version = "0.1.0"
 description = "A package for data extraction from the IMF!"
 authors = ["Irina Klein, Sou-Cheng T. Choi"]
