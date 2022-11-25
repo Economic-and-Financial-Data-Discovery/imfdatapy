@@ -1,8 +1,5 @@
 bin/
 
-ignore_package
-_src
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -147,3 +144,8 @@ dmypy.json
 .DS_Store
 .idea/misc.xml
 .idea/Stock-Data-Analysis.iml
+
+# Irina's local ignores
+ignore_package
+_src
+
