@@ -13,10 +13,18 @@ TODO data license warning
 
 ## Usage
 
-```python
-TODO
+`imfdatapy` can be used to search through and extract data as follows. The examples below show how to search through the IFS (International Financial Statistics) and BOP (Balance of Payments) using ```serach_terms``` and download all the data with matching economic indicator names.
 
+```python
+from imfdatapy.imf import *
+ifs = IFS(search_terms=["gross domestic product, real"], countries=["US"], period='Q', start_date="2000", end_date="2022")
+df = ifs.download_data()
+
+bop = BOP(search_terms=["current account, total, credit"], countries=["US"], period='Q',
+start_date="2000", end_date="2022")
+df = bop.download_data()
 ```
+
 ## Contributing
 
 Interested in contributing? Check out the contributing guidelines. Please note that this project is released with a [Code of Conduct](CONDUCT.md). By contributing to this project, you agree to abide by its terms.
