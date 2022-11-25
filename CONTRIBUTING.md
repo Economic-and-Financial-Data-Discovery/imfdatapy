@@ -40,10 +40,17 @@ If you are proposing a feature:
 
 ## Get Started!
 
-Ready to contribute? Here's how to set up `pycounts` for local development.
+Ready to contribute? Here's how to set up `imfdatapy` for local development.
 
-1. Download a copy of `imf_dd` locally.
-2. Install `imf_dd` using `poetry`:
+TODO
+
+1. Download a copy of `imfdatapy` locally.
+
+  ```console
+  $ make install_imf
+  ```
+
+2. Install `imfdatapy` using `poetry`:
 
     ```console
     $ poetry install
@@ -69,5 +76,5 @@ Before you submit a pull request, check that it meets these guidelines:
 
 ## Code of Conduct
 
-Please note that the `imf_dd` project is released with a
+Please note that the `imfdatapy` project is released with a
 Code of Conduct. By contributing to this project you agree to abide by its terms.
