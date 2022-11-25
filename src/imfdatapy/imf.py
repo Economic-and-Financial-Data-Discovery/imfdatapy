@@ -22,6 +22,9 @@ logging.config.fileConfig(log_file_path, disable_existing_loggers=False)
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='../../log/imf.log', encoding='utf-8', level=logging.info)
 
+# IK: add filename and line number, where is the log file?
+# logging.basicConfig(filename='../../log/imf.log', encoding='utf-8', level=logging.info,
+#                     format='%(asctime)%:%(filename)f:%(funcName)s:%(lineno)d:%(message)s')
 
 # abstract class
 class Series(ABC):
@@ -30,7 +33,7 @@ class Series(ABC):
                  start_date="2000-01-01", end_date="2022-10-20"):
         """
 
-        :param series: IMF series name, e.g., "IMF", "DOT"
+        :param series: IMF series name, e.g., "IFS", "DOT"
         :param search_terms: list of strings to find in indicator names in the series
         :param countries: list of strings containing ISO-2 code of country names
         :param period: frequency of time series
@@ -95,9 +98,9 @@ class IMF(Series):
         super().__init__(series, search_terms, countries, period, start_date, end_date)
 
     def output_series(self, series=None):
-        """
+        """ Method to output all or some IMF series names to a .csv file in 'out'.
 
-        :param series: output all or some IMF series names to a .csv file in 'out'
+        :param series: Series code as a string
 
         """
         # output to csv file
@@ -112,9 +115,9 @@ class IMF(Series):
             logging.info(f"Output series containing '{series}' table to {outfile_path}")
 
     def output_dim(self, dim_name=None):
-        """
+        """ Method to output all or some dimension tables to a .csv file in 'out'.
 
-        :param dim_name: output all or some dimension tables to a .csv file in 'out'
+        :param dim_name: Dimension name as a string
 
         """
         # output to csv file
@@ -125,9 +128,9 @@ class IMF(Series):
                 logging.info(f"Output dimension {key} table to {outfile_path}")
 
     def output_meta(self, indicator=None):
-        """
+        """ Method to output all or some indicators in a tables to a .csv file in 'out'.
 
-        :param indicator: output all or some indicators in a tables to a .csv file in 'out'
+        :param indicator: Indicator code as a string
 
         """
         # output to csv file
@@ -144,9 +147,9 @@ class IMF(Series):
             logging.info(f"Output meta data of {self.series} containing '{st_str}' table to {outfile_path}")
 
     def output_data(self, data=None):
-        """
+        """ Method to output downloaded time series data to a .csv file in 'out'.
 
-        :param data: output downloaded time series data to a .csv file in 'out'
+        :param data: TODO
 
         """
 
@@ -205,8 +208,7 @@ class IMF(Series):
         self.series_names_df = self.series_names_df.sort_values("ID")
         """
         logging.debug(self.series_df.head())
-        return  self.series_df
-
+        return self.series_df
 
     def get_dimensions(self):
         """
@@ -279,7 +281,8 @@ class IMF(Series):
             string_columns = self.meta_df.select_dtypes(include=object).columns
             for col, search_term in itertools.product(string_columns, self.search_terms):
                 logging.debug(f"{col = }, {search_term = }")
-                self.meta_df["search_found"] = self.meta_df["search_found"] | self.meta_df[col].str.lower().str.contains(
+                self.meta_df["search_found"] = self.meta_df["search_found"] | self.meta_df[
+                    col].str.lower().str.contains(
                     search_term.lower())
                 logging.debug(self.meta_df["search_found"].describe())
                 logging.debug(self.meta_df[self.meta_df["search_found"]])
@@ -362,8 +365,8 @@ class IMF(Series):
                                 }
                             )
 
-                            #temp_df['Country'] = series[n].get('@REF_AREA')
-                            #temp_df['ID'] = series[n].get('@INDICATOR')
+                            # temp_df['Country'] = series[n].get('@REF_AREA')
+                            # temp_df['ID'] = series[n].get('@INDICATOR')
                             for k in series[n].keys():
                                 if k != "Obs":
                                     temp_df[k] = series[n].get(k)
@@ -443,30 +446,37 @@ class IMF(Series):
 class IFS(IMF):
     def __init__(self, series='IFS', search_terms=None, countries=None, period='Q',
                  start_date="2000-01-01", end_date="2022-10-20"):
-        super().__init__(series=series, search_terms=search_terms, countries=countries, period=period, start_date=start_date, end_date=end_date)
+        super().__init__(series=series, search_terms=search_terms, countries=countries, period=period,
+                         start_date=start_date, end_date=end_date)
 
 
 class DOT(IMF):
     def __init__(self, series='DOT', search_terms=None, countries=None, period='Q',
                  start_date="2000-01-01", end_date="2022-10-20"):
-        super().__init__(series=series, search_terms=search_terms, countries=countries, period=period, start_date=start_date, end_date=end_date)
+        super().__init__(series=series, search_terms=search_terms, countries=countries, period=period,
+                         start_date=start_date, end_date=end_date)
 
 
 class BOP(IMF):
     def __init__(self, series='BOP', search_terms=None, countries=None, period='Q',
                  start_date="2000-01-01", end_date="2022-10-20"):
-        super().__init__(series=series, search_terms=search_terms, countries=countries, period=period, start_date=start_date, end_date=end_date)
+        super().__init__(series=series, search_terms=search_terms, countries=countries, period=period,
+                         start_date=start_date, end_date=end_date)
 
 
 class FSI(IMF):
     def __init__(self, series='FSI', search_terms=None, countries=None, period='Q',
                  start_date="2000-01-01", end_date="2022-10-20"):
-        super().__init__(series=series, search_terms=search_terms, countries=countries, period=period, start_date=start_date, end_date=end_date)
+        super().__init__(series=series, search_terms=search_terms, countries=countries, period=period,
+                         start_date=start_date, end_date=end_date)
+
 
 class GFSR(IMF):
     """
     TODO What is GFSR
     """
+
     def __init__(self, series='GFSR', search_terms=None, countries=None, period='A',
                  start_date="2000-01-01", end_date="2022-10-20"):
-        super().__init__(series=series, search_terms=search_terms, countries=countries, period=period, start_date=start_date, end_date=end_date)
+        super().__init__(series=series, search_terms=search_terms, countries=countries, period=period,
+                         start_date=start_date, end_date=end_date)
