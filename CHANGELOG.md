@@ -1,6 +1,9 @@
 # Changelog
 
 <!--next-version-placeholder-->
+## v0.1.2 (25/11/2022)
+
+- Resolve dependecies issue.
 
 ## v0.1.1 (25/11/2022)
 
