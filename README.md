@@ -17,7 +17,8 @@ TODO data license warning
 
 ```python
 from imfdatapy.imf import *
-ifs = IFS(search_terms=["gross domestic product, real"], countries=["US"], period='Q', start_date="2000", end_date="2022")
+ifs = IFS(search_terms=["gross domestic product, real"], countries=["US"], period='Q',
+start_date="2000", end_date="2022")
 df = ifs.download_data()
 
 bop = BOP(search_terms=["current account, total, credit"], countries=["US"], period='Q',
@@ -31,7 +32,7 @@ Interested in contributing? Check out the contributing guidelines. Please note t
 
 ## License
 
-`imfdatapy` was created by Irina Klein and Sou-Cheng T. Choi, Illinois Institute of Technology. It is licensed under the terms of the Apache License, v2.0.
+`imfdatapy` was created by Sou-Cheng T. Choi and Irina Klein, Illinois Institute of Technology. It is licensed under the terms of the Apache License, v2.0.
 
 ## Credits
 
