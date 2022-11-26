@@ -32,7 +32,7 @@ class CleanCommand(Command):
         pass
 
     def run(self):
-        os.system("rm -vrf ./build ./dist ./*.pyc ./imf/imf.egg-info")
+        os.system("rm -vrf ./build ./dist ./*.pyc ./imfdatapy/imfdatapy.egg-info")
 
 
 try:
@@ -42,10 +42,10 @@ except:
     long_description = "IMF Data Discovery"
 
 packages = [
-    'imf']
+    'imfdatapy']
 
 setuptools.setup(
-    name="imf",
+    name="imfdatapy",
     version="1.0",
     author="Sou-Cheng T. Choi and Irina Klein",
     author_email="schoi32@iit.edu",
@@ -53,8 +53,8 @@ setuptools.setup(
     description="IMF Data Discovery API in Python 3",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/kloiks/IMF_data_discovery",
-    download_url="https://github.com/kloiks/IMF_data_discovery/releases/tag/v1.0.gz",
+    url="https://github.com/Economic-and-Financial-Data-Discovery/imfdatapy",
+    download_url="https://github.com/Economic-and-Financial-Data-Discovery/imfdatapy/releases/tag/v1.0.gz",
     packages=packages,
     install_requires=[
         'requests >= 2.28.1',
@@ -63,7 +63,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent"],
-    keywords=["imf", "data"],
+    keywords=["IMF data", "JSON API"],
     python_requires=">=3.5",
     include_package_data=True,
     cmdclass={
