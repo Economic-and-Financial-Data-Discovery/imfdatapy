@@ -6,6 +6,7 @@ Creation Date: Jun 15, 2022
 from abc import ABC, abstractmethod
 
 from os import path
+from os import mkdir
 
 import time as tm
 
@@ -22,9 +23,6 @@ logging.config.fileConfig(log_file_path, disable_existing_loggers=False)
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='../../log/imf.log', encoding='utf-8', level=logging.info)
 
-# IK: add filename and line number, where is the log file?
-# logging.basicConfig(filename='../../log/imf.log', encoding='utf-8', level=logging.info,
-#                     format='%(asctime)%:%(filename)f:%(funcName)s:%(lineno)d:%(message)s')
 
 # abstract class
 class Series(ABC):
@@ -49,7 +47,8 @@ class Series(ABC):
         self.start_time, self.end_time = start_date[:4], end_date[:4]
         self.url = 'http://dataservices.imf.org/REST/SDMX_JSON.svc/'
         countries_str = ", ".join(self.countries)
-        logging.info(f"{countries_str = }, {self.start_date = }, {self.end_date = }")
+       
+        #logging.info(f"{countries_str = }, {self.start_date = }, {self.end_date = }")
 
         self.meta_df = pd.DataFrame()
         self.series_df = pd.DataFrame()
@@ -58,6 +57,11 @@ class Series(ABC):
 
         self._max_requests = 10
         self._sleep_sec = 1
+        
+        # Doesn't create new directory in colab
+        outdir = '../out'
+        if not path.exists(outdir):
+            mkdir(outdir)
 
     def get_series_names(self):
         """
@@ -189,10 +193,10 @@ class IMF(Series):
         self.series_df["search_found"] = False
         string_columns = self.series_df.select_dtypes(include=object).columns
         for col, search_term in itertools.product(string_columns, [search_terms]):
-            logging.debug(f"{col = }, {search_term = }")
+            #logging.debug(f"{col = }, {search_term = }")
             self.series_df["search_found"] = self.series_df["search_found"] | self.series_df[col].str.lower().str.contains(
                 search_term.lower())
-            logging.debug(self.series_df["search_found"].describe())
+            #logging.debug(self.series_df["search_found"].describe())
         self.series_df = self.series_df[self.series_df["search_found"]]
         self.series_df = self.series_df.drop(['search_found'], axis=1)
         self.output_series(series=self.series)
@@ -280,7 +284,7 @@ class IMF(Series):
             self.meta_df["search_found"] = False
             string_columns = self.meta_df.select_dtypes(include=object).columns
             for col, search_term in itertools.product(string_columns, self.search_terms):
-                logging.debug(f"{col = }, {search_term = }")
+                #logging.debug(f"{col = }, {search_term = }")
                 self.meta_df["search_found"] = self.meta_df["search_found"] | self.meta_df[
                     col].str.lower().str.contains(
                     search_term.lower())
@@ -293,7 +297,7 @@ class IMF(Series):
                 self.meta_df.columns = ["ID", *list(self.meta_df.columns)[1:]]
             if "Description" not in self.meta_df.columns:
                 self.meta_df.columns = [*list(self.meta_df.columns)[:-1], "Description"]
-            logging.info(f"{self.meta_df.shape = }")
+            #logging.info(f"{self.meta_df.shape = }")
             self.output_meta(indicator="")
         else:
             logging.warning(f"Failed to download meta data.")
@@ -394,7 +398,7 @@ class IMF(Series):
         self.data_df = self.data_df[["Description", "Country", 'Period', "Value", "ID"]]
         # sorting
         self.data_df.sort_values(by=["ID", "Country", 'Period'], axis=0, inplace=True)
-        logging.info(f"{self.data_df.shape = }")
+        #logging.info(f"{self.data_df.shape = }")
         self.output_data(data="")
 
         return self.data_df
@@ -414,7 +418,7 @@ class IMF(Series):
     def get_meta(self):
         """
 
-        :return: mete data of time series data
+        :return: meta data of time series data
         """
         return self.meta_df
 
