@@ -3,8 +3,6 @@
 A package for data discovery and extraction from the International Monetary Fund (IMF)!
 This repository contains Python source code and Jupyter notebooks with examples on how to extract data from the IMF.
 
-TODO data license warning
-
 ## Installation
 
 ```bash
@@ -33,6 +31,10 @@ Interested in contributing? Check out the contributing guidelines. Please note t
 ## License
 
 `imfdatapy` was created by Sou-Cheng T. Choi and Irina Klein, Illinois Institute of Technology. It is licensed under the terms of the Apache License, v2.0.
+
+With regard to the terms for using IMF data, please refer to IMF's [Copyright and Usage](https://www.imf.org/external/terms.htm) and pay special attention to the 
+section _SPECIAL TERMS AND CONDITIONS PERTAINING TO THE USE OF DATA_.  
+
 
 ## Credits
 
