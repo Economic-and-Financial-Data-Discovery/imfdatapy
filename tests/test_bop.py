@@ -1,6 +1,4 @@
-import logging.config
 import unittest
-
 from imfdatapy.imf import *
 
 class MyTestCase(unittest.TestCase):
@@ -16,11 +14,5 @@ class MyTestCase(unittest.TestCase):
         self.assertGreaterEqual(meta_df.shape[0], 6)
 
 
-
-
 if __name__ == '__main__':
     unittest.main()
-
-"""
-
-"""
