@@ -34,7 +34,8 @@ logging.basicConfig(filename=f'{logdir}/imf_{time_stamp}.log', encoding='utf-8',
 # abstract class
 class Series(ABC):
 
-    def __init__(self, series='IFS', search_terms=None, countries=None, period='Q', start_date=None, end_date=None, outdir=None):
+    def __init__(self, series='IFS', search_terms=None, countries=None, period='Q', start_date=None, end_date=None,
+                 outdir=None):
         """
         This function initializes the IMF class, which is used to download data from the IMF's Data API.
 
@@ -43,8 +44,8 @@ class Series(ABC):
           search_terms: list of strings to find in indicator names in the series
           countries: list of strings containing ISO-2 code of country names
           period: frequency of time series, defaults to Q
-          start_date: The start date of the time series. Defaults to 2000-01-01
-          end_date: The end date of the time series. Defaults to 2022-10-20
+          start_date: The start date of the time series, e.g, 2000-01-01. Defaults to None to get earliest date of data.
+          end_date: The end date of the time series, e.g, 2022-10-20. Defaults to None to get latest date of data.
           outdir: the directory where the data will be saved
         """
         self.series = series
@@ -131,7 +132,6 @@ class IMF(Series):
                 logging.info(f"Output series containing '{series}' in a {self.series_df.shape} table to {outfile_path}")
         else:
             logging.warning(f"No series data to be output")
-
 
     def output_dim(self, dim_name=None):
         """
@@ -263,7 +263,8 @@ class IMF(Series):
         string_columns = self.series_df.select_dtypes(include=object).columns
         for col, search_term in itertools.product(string_columns, [search_terms]):
             logging.debug(f"{col = }, {search_term = }")
-            self.series_df["search_found"] = self.series_df["search_found"] | self.series_df[col].str.lower().str.contains(
+            self.series_df["search_found"] = self.series_df["search_found"] | self.series_df[
+                col].str.lower().str.contains(
                 search_term.lower())
             logging.debug(self.series_df["search_found"].describe())
         self.series_df = self.series_df[self.series_df["search_found"]]
@@ -274,7 +275,6 @@ class IMF(Series):
 
         logging.debug(self.series_df.head())
         return self.series_df
-
 
     def get_dimensions(self):
         """
@@ -304,7 +304,8 @@ class IMF(Series):
                         def _get_metadata(series='IFS'):
                             url = 'http://dataservices.imf.org/REST/SDMX_JSON.svc/'
                             key = f'GenericMetadata/{series}'
-                            metadata = requests.get(f'{self.url}{key}').json()['GenericMetadata']['MetadataSet']['AttributeValueSet']
+                            metadata = requests.get(f'{self.url}{key}').json()['GenericMetadata']['MetadataSet'][
+                                'AttributeValueSet']
                             # TODO use my request function
                             return metadata
 
@@ -424,7 +425,6 @@ class IMF(Series):
         self.meta_df = self.clean_column_names(self.meta_df)
         logging.info(f"Read meta information from historical data {infile}")
 
-
     # overriding abstract method
     def download_data(self):
         """
@@ -514,14 +514,13 @@ class IMF(Series):
                             temp_df.drop('@TIME_PERIOD', axis=1, inplace=True)
 
                             temp = pd.concat([temp, temp_df], axis=0)
-
                 except:
                     pass
 
         is_output = True
         if temp.shape[0] == 0:
             csv_filename, _ = self.gen_data_filename()
-            outfile_path=  f"{self.outdir}{csv_filename}"
+            outfile_path = f"{self.outdir}{csv_filename}"
             temp = pd.read_csv(outfile_path)
             logging.warning(f"Read data from historical file {outfile_path}")
             if "Description" in temp.columns:
@@ -581,8 +580,9 @@ class IMF(Series):
                     json = rq.json()
                 except:
                     # print a warning message to the console if it does not gets a valid response from the IMF data server
-                    logger.warning(f"Response received from IMF data server for {url = }.")
-                    return json
+                    if isinstance(json, dict) and (len(json) >= 1):  # invalid response
+                        logger.warning(f"Invalid response received from IMF data server for {url = }.")
+                        return json
 
         if not (isinstance(json, dict) and (len(json) >= 1)):
             # check that the JSON object is a dictionary, and that it has more than one key, otherwise gives a warning
@@ -604,7 +604,7 @@ class IMF(Series):
     # overriding abstract method
     def get_data(self):
         """
-        > This function returns the time series data.
+        This function returns the time series data.
 
         Returns:
           The dataframe of the time series data.
@@ -617,7 +617,7 @@ class IMF(Series):
         The function returns a summary of data.
 
         Returns:
-          The describe_data method returns a Pandas dataframe that contains the summary statistics of the data.
+          A Pandas dataframe that contains the summary statistics of the data.
         """
 
         self.data_summary_df = self.data_df.groupby(["ID", "COUNTRY"]).describe(include="all", datetime_is_numeric=True).T
@@ -627,9 +627,10 @@ class IMF(Series):
         """
         This function takes the meta data dataframe and returns a summary of the meta data.
 
-        :return: summary of meta data
+        Returns:
+            Summary of meta data
         """
-        self.meta_summary_df  = self.meta_df.describe(include="all", datetime_is_numeric=True)
+        self.meta_summary_df = self.meta_df.describe(include="all", datetime_is_numeric=True)
         return self.meta_summary_df
 
 
@@ -637,15 +638,18 @@ class AFRREO(IMF):
     """
     Sub-Saharan Africa Regional Economic Outlook (AFRREO). A child class of IMF.
     """
+
     def __init__(self, series='AFRREO', search_terms=None, countries=None, period='Q',
                  start_date=None, end_date=None, outdir=None):
         super().__init__(series=series, search_terms=search_terms, countries=countries, period=period,
                          start_date=start_date, end_date=end_date, outdir=outdir)
 
+
 class IFS(IMF):
     """
     International Financial Statistics (IFS). A child class of IMF.
     """
+
     def __init__(self, series='IFS', search_terms=None, countries=None, period='Q',
                  start_date=None, end_date=None, outdir=None):
         super().__init__(series=series, search_terms=search_terms, countries=countries, period=period,
@@ -656,6 +660,7 @@ class DOT(IMF):
     """ Direction of Trade Statistics (DOT). A child class of IMF.
 
     """
+
     def __init__(self, series='DOT', search_terms=None, countries=None, period='Q',
                  start_date=None, end_date=None, outdir=None):
         super().__init__(series=series, search_terms=search_terms, countries=countries, period=period,
@@ -666,6 +671,7 @@ class BOP(IMF):
     """
     Balance of Payments (BOP). A child class of IMF.
     """
+
     def __init__(self, series='BOP', search_terms=None, countries=None, period='Q',
                  start_date=None, end_date=None, outdir=None):
         super().__init__(series=series, search_terms=search_terms, countries=countries, period=period,
@@ -677,6 +683,7 @@ class FSI(IMF):
     Financial Soundness Indicators (FSIs). A child class of IMF.
 
     """
+
     def __init__(self, series='FSI', search_terms=None, countries=None, period='M',
                  start_date=None, end_date=None, outdir=None):
         super().__init__(series=series, search_terms=search_terms, countries=countries, period=period,
@@ -711,6 +718,7 @@ class HPDD(IMF):
     """
      Historical Public Debt Database (HPDD). A child class of IMF.
     """
+
     def __init__(self, series='HPDD', search_terms=None, countries=None, period='A',
                  start_date=None, end_date=None, outdir=None):
         super().__init__(series=series, search_terms=search_terms, countries=countries, period=period,
@@ -720,6 +728,6 @@ class HPDD(IMF):
 #
 if __name__ == '__main__':
     ifs = IFS(search_terms=["Gross Domestic Product, Real"], countries=["US", "DE"],
-                      period='Q', start_date="2000", end_date="2022", outdir = f"..{os.sep}..{os.sep}out{os.sep}")
+              period='Q', start_date="2000", end_date="2022", outdir=f"..{os.sep}..{os.sep}out{os.sep}")
     df = ifs.download_data()
     df_summary = ifs.describe_data()
