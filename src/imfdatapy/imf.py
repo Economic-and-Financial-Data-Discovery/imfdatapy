@@ -40,26 +40,38 @@ class Series(ABC):
         This function initializes the IMF class, which is used to download data from the IMF's Data API.
 
         Args:
-          series: The name of the series you want to download. Defaults to IFS
-          search_terms: list of strings to find in indicator names in the series
-          countries: list of strings containing ISO-2 code of country names
-          period: frequency of time series, defaults to Q
-          start_date: The start date of the time series, e.g, 2000-01-01. Defaults to None to get earliest date of data.
-          end_date: The end date of the time series, e.g, 2022-10-20. Defaults to None to get latest date of data.
+          series: the name of the series to download. Defaults to 'IFS'.
+          search_terms: list of strings to find in indicator names in the series.
+          countries: list of strings containing ISO-2 code of country names.
+          period: frequency of time series. Defaults to 'Q'.
+          start_date: The start date of the time series, e.g, 2000-01-01. Defaults to None to get the earliest date of data.
+          end_date: The end date of the time series, e.g, 2022-10-20. Defaults to None to get the latest date of data.
           outdir: the directory where the data will be saved
         """
+        input_str = ""
+        if series is not None:
+            input_str += f"{series = }"
+        if search_terms is not None:
+            input_str += f", {search_terms = }"
+        if countries is not None:
+            input_str += f", {countries = }"
+        if start_date is not None:
+            input_str += f", {start_date = }"
+        if end_date is not None:
+            input_str += f", {end_date = }"
+        if outdir is not None:
+            input_str += f", {outdir = }"
+        logging.info(f"Inputs: {input_str}")
+
         self.series = series
-        self.search_terms = ["Gross Domestic Product, Real"] if search_terms is None else search_terms
-        self.countries = ["US"] if countries is None else countries
+        self.search_terms = search_terms
+        self.countries = countries
         self.start_date = start_date
         self.end_date = end_date
         self.period = period
         self.start_time = start_date[:4] if isinstance(start_date, str) else start_date
         self.end_time = end_date[:4] if isinstance(end_date, str) else end_date
         self.url = 'http://dataservices.imf.org/REST/SDMX_JSON.svc/'
-        countries_str = ", ".join(self.countries)
-        logging.debug(f"countries = {countries_str}, {start_date = }, {end_date = }")
-
         self.meta_df = pd.DataFrame()
         self.series_df = pd.DataFrame()
         self.data_df = pd.DataFrame()
@@ -208,9 +220,14 @@ class IMF(Series):
         Returns:
           The filename and the search terms
         """
-
-        st_str = "_".join(self.search_terms)
-        ctry_str = "_".join(self.countries)
+        if len(self.search_terms) > 3:
+            st_str = "_".join(self.search_terms[:3]) + f"_{len(self.search_terms) - 3}"
+        else:
+            st_str = "_".join(self.search_terms)
+        if len(self.countries) > 5:
+            ctry_str = "_".join(self.countries[:5]) + f"_{len(self.countries)-5}"
+        else:
+            ctry_str = "_".join(self.countries)
 
         time = ''
         if self.start_time is not None and self.end_time is not None:
@@ -219,6 +236,7 @@ class IMF(Series):
             time = f'_{self.end_time}'
         if self.start_time is not None and self.end_time is None:
             time = f'_{self.start_time}_'
+
         if not is_meta:
             csv_filename = f"data_{st_str}_{ctry_str}_{self.period}{time}"[:MAX_FILENAME_LEN]
         else:
@@ -435,6 +453,9 @@ class IMF(Series):
         """
         self.get_series_names()
         self.get_dimensions()
+
+        self.validate_inputs()
+
         self.meta_df = self.download_meta()
 
         base = f'{self.url}CompactData/{self.series}/'
@@ -515,17 +536,22 @@ class IMF(Series):
 
                             temp = pd.concat([temp, temp_df], axis=0)
                 except:
+                    logging.warning(f"Request for IMF data failed for area code, {cont}: {url = }.")
                     pass
 
         is_output = True
         if temp.shape[0] == 0:
             csv_filename, _ = self.gen_data_filename()
             outfile_path = f"{self.outdir}{csv_filename}"
-            temp = pd.read_csv(outfile_path)
-            logging.warning(f"Read data from historical file {outfile_path}")
-            if "Description" in temp.columns:
-                temp = temp.drop(['Description'], axis=1)
-            is_output = False
+            if path.exists(outfile_path):
+                temp = pd.read_csv(outfile_path)
+                logging.warning(f"Read data from historical file {outfile_path}")
+                if "Description" in temp.columns:
+                    temp = temp.drop(['Description'], axis=1)
+                is_output = False
+            else:
+                logging.warning(f"No data has been downloaded.")
+                return pd.DataFrame()
 
         self.data_df = pd.concat([temp, self.data_df], axis=0)
         self.data_df = pd.merge(self.data_df, self.meta_df, on="ID", how="left")
@@ -541,6 +567,47 @@ class IMF(Series):
             self.output_data(is_gen_filename=True)
 
         return self.data_df
+
+    def validate_inputs(self):
+        # check period and correct wrong value
+        valid_periods = self.dim_dict[f"CL_FREQ_{self.series.upper()}"]["VALUE"].values
+        valid_periods_str = ", ".join(valid_periods)
+        if not (self.period in valid_periods):
+            logging.warning(f"Input period '{self.period}' is not valid (See CL_AREA_{self.series} output table). Changing it to '{valid_periods[0]}'.")
+            self.period = valid_periods[0]
+
+        # validate start date and end date
+        def _validate_date(date, date_des):
+            try:
+                if date is not None:
+                    datetime.strptime(date, "%Y")
+            except ValueError:
+                logging.warning(f"Incorrect data format in input {date_des}, should be 'YYYY'. Setting it to 'None'.")
+                date = None
+            return date
+
+        self.start_time = _validate_date(self.start_time, "start_date")
+        self.end_time = _validate_date(self.end_time, "end_date")
+
+        # check country and correct wrong value
+        valid_countries = self.dim_dict[f"CL_AREA_{self.series.upper()}"]["VALUE"].values
+        if self.countries is None:
+            self.countries = valid_countries
+        rm_countries = []
+        for c in self.countries:
+            if not (c in valid_countries):
+                logging.warning(f"Input country '{c}' is not valid (see CL_AREA_{self.series}'s output table). Dropping it from input.")
+                rm_countries.extend([c])
+        for c in rm_countries:
+            self.countries.remove(c)
+        if len(self.countries) == 0:
+            logging.warning(f"Input countries contains no valid entries. Setting it to [{valid_countries[0]}]")
+            self.countries = [valid_countries[0]]
+
+        # validate serarch terms
+        if self.search_terms is None:
+            self.search_terms = self.meta_df.iloc[:, -1].values
+
 
     def clean_column_names(self, df):
         """
@@ -580,8 +647,7 @@ class IMF(Series):
                     json = rq.json()
                 except:
                     # print a warning message to the console if it does not gets a valid response from the IMF data server
-                    if isinstance(json, dict) and (len(json) >= 1):  # invalid response
-                        logger.warning(f"Invalid response received from IMF data server for {url = }.")
+                    if isinstance(json, dict) and (len(json) >= 1):  # actrally valid response
                         return json
 
         if not (isinstance(json, dict) and (len(json) >= 1)):
