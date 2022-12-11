@@ -153,7 +153,7 @@ class IMF(Series):
           dim_name: Dimension name as a string
         """
         # output to csv file
-        if dim_name is not None:
+        if dim_name is None:
             for key in self.dim_dict.keys():
                 outfile_path = f"{self.outdir}dim_{key.lower()}.csv"
                 if (self.dim_dict[key].shape[0] > 0) and (self.dim_dict[key].shape[1] > 0):
@@ -161,6 +161,14 @@ class IMF(Series):
                     logging.info(f"Output dimension {key} in a {self.dim_dict[key].shape} table to {outfile_path}")
                 else:
                     logging.warning(f"No dimension {key} data to be output.")
+        else:
+            key = dim_name
+            outfile_path = f"{self.outdir}dim_{key.lower()}.csv"
+            if (self.dim_dict[key].shape[0] > 0) and (self.dim_dict[key].shape[1] > 0):
+                self.dim_dict[key].to_csv(outfile_path, index=False)
+                logging.info(f"Output dimension {key} in a {self.dim_dict[key].shape} table to {outfile_path}")
+            else:
+                logging.warning(f"No dimension {key} data to be output.")
 
     def output_meta(self, indicator=None):
         """
@@ -225,7 +233,7 @@ class IMF(Series):
         else:
             st_str = "_".join(self.search_terms)
         if len(self.countries) > 5:
-            ctry_str = "_".join(self.countries[:5]) + f"_{len(self.countries)-5}"
+            ctry_str = "_".join(self.countries[:5]) + f"_{len(self.countries) - 5}"
         else:
             ctry_str = "_".join(self.countries)
 
@@ -315,11 +323,24 @@ class IMF(Series):
             self.dim_meta_df = self.dim_meta_df.sort_values("Dimension")
 
             for n in range(0, len(self.dimension_list)):
+                is_output = True
                 try:
                     dim_name = self.dimension_list[n]['@codelist']
                     key = f"CodeList/{dim_name}"
                     if dim_name[:7] in ["CL_FREQ"]:
                         def _get_metadata(series='IFS'):
+                            """
+                            The function `_get_metadata` takes a single argument, `series`, which is a string that defaults to
+                            `'IFS'`. The function then uses the `repeat_request` function to make a request to the
+                            `GenericMetadata` endpoint of the API, and if the request is successful, it returns the
+                            `AttributeValueSet` of the `MetadataSet` of the `GenericMetadata` of the response
+
+                            Args:
+                              series: The data series you want to download. Defaults to `IFS`
+
+                            Returns:
+                              A list of dictionaries containing metadata.
+                            """
                             key = f'GenericMetadata/{series}'
                             json = self.repeat_request(url=f'{self.url}{key}')
                             if json is not None:
@@ -328,7 +349,18 @@ class IMF(Series):
                                 metadata = None
                             return metadata
 
-                        def _print_metadata(metadata, indicator='FREQ'):
+                        def _extract_metadata(metadata, indicator='FREQ'):
+                            """
+                            Given an economic indicator name, the function takes in a list of dictionaries, and returns a dataframe with two columns, one for
+                            the valid values and one for the value description of the indicator.
+
+                            Args:
+                              metadata: the metadata dictinoary from the API call
+                              indicator: The indicator we want to get data for. Defaults to 'FREQ'.
+
+                            Returns:
+                              A dataframe with the value and description of the frequency of the data.
+                            """
                             if metadata is None:
                                 return pd.DataFrame()
 
@@ -345,12 +377,18 @@ class IMF(Series):
                             return df
 
                         _metadata = _get_metadata(series=self.series)
-                        code_df = _print_metadata(metadata=_metadata, indicator='FREQ')
-                        code_df = self.clean_column_names(code_df)
+                        _metadata = None # TODO temp
                         if dim_name[-4:].lower() != self.series.lower():
                             dim_name = "_".join([dim_name, self.series])
-                        self.dim_dict[dim_name] = code_df
-                        logging.debug(f"Dimension {dim_name} details: \n{code_df}")
+                        if _metadata is not None:
+                            code_df = _extract_metadata(metadata=_metadata, indicator='FREQ')
+                            code_df = self.clean_column_names(code_df)
+                            self.dim_dict[dim_name] = code_df
+                            logging.debug(f"Dimension {dim_name} details: \n{code_df}")
+                            self.output_dim(dim_name)
+                        else:
+                            logging.warning(f"Failed to download dimension, CL_FREQ.")
+                            self.read_dim_df(dim_name=dim_name)
                     else:
                         json = self.repeat_request(url=f'{self.url}{key}')
                         if json is not None:
@@ -359,12 +397,15 @@ class IMF(Series):
                             code_df = self.clean_column_names(code_df)
                             self.dim_dict[dim_name] = code_df
                             logging.debug(f"Dimension {dim_name} details: \n{code_df}")
+                            self.output_dim(dim_name)
                         else:
-                            logging.warning(f"Failed to download {dim_name}.")
+                            logging.warning(f"Failed to download dimension {dim_name}.")
+                            self.read_dim_df(dim_name=dim_name)
+
                 except:
                     pass
 
-            self.output_dim("")
+
         else:
             logging.warning(f"Failed to download dimensions.")
 
@@ -446,6 +487,19 @@ class IMF(Series):
         )
         self.meta_df = self.clean_column_names(self.meta_df)
         logging.info(f"Read meta information from historical data {infile}")
+
+
+    def read_dim_df(self, dim_name="CL_FREQ"):
+        """
+        The function reads a csv file with dimension data into a Pandas dataframe.
+
+        Args:
+            dim_name: name of dimension
+        """
+        infile = f"{self.outdir}dim_{dim_name.lower()}.csv"
+        self.dim_dict[dim_name] = pd.read_csv(infile)
+        logging.info(f"Read dimension information from historical data {infile}")
+
 
     # overriding abstract method
     def download_data(self):
@@ -571,6 +625,10 @@ class IMF(Series):
         return self.data_df
 
     def validate_inputs(self):
+        """
+        The function checks if the user inputs are valid. It will change an invalid input to a valid value with a warning.
+        """
+
         # check period and correct wrong value
         freq_key = f"CL_FREQ_{self.series.upper()}"
         if freq_key in self.dim_dict.keys():
@@ -582,6 +640,17 @@ class IMF(Series):
 
         # validate start date and end date
         def _validate_date(date, date_des):
+            """
+            It takes in a date and a description of the date, and if the date is not in the correct format, it
+            logs a warning and returns None.
+
+            Args:
+              date: The date of the data you want to get.
+              date_des: description of the date, used for logging.
+
+            Returns:
+              A valid date
+            """
             try:
                 if date is not None:
                     datetime.strptime(date, "%Y")
@@ -611,7 +680,6 @@ class IMF(Series):
         # validate serarch terms
         if self.search_terms is None:
             self.search_terms = self.meta_df.iloc[:, -1].values
-
 
     def clean_column_names(self, df):
         """
