@@ -320,14 +320,18 @@ class IMF(Series):
                     key = f"CodeList/{dim_name}"
                     if dim_name[:7] in ["CL_FREQ"]:
                         def _get_metadata(series='IFS'):
-                            url = 'http://dataservices.imf.org/REST/SDMX_JSON.svc/'
                             key = f'GenericMetadata/{series}'
-                            metadata = requests.get(f'{self.url}{key}').json()['GenericMetadata']['MetadataSet'][
-                                'AttributeValueSet']
-                            # TODO use my request function
+                            json = self.repeat_request(url=f'{self.url}{key}')
+                            if json is not None:
+                                metadata = json['GenericMetadata']['MetadataSet']['AttributeValueSet']
+                            else:
+                                metadata = None
                             return metadata
 
                         def _print_metadata(metadata, indicator='FREQ'):
+                            if metadata is None:
+                                return pd.DataFrame()
+
                             des_list, value_list = [], []
                             for i in range(len(metadata)):
                                 ind = metadata[i]['ReportedAttribute'][1]['@conceptID']
@@ -453,9 +457,7 @@ class IMF(Series):
         """
         self.get_series_names()
         self.get_dimensions()
-
         self.validate_inputs()
-
         self.meta_df = self.download_meta()
 
         base = f'{self.url}CompactData/{self.series}/'
@@ -570,11 +572,13 @@ class IMF(Series):
 
     def validate_inputs(self):
         # check period and correct wrong value
-        valid_periods = self.dim_dict[f"CL_FREQ_{self.series.upper()}"]["VALUE"].values
-        valid_periods_str = ", ".join(valid_periods)
-        if not (self.period in valid_periods):
-            logging.warning(f"Input period '{self.period}' is not valid (See CL_AREA_{self.series} output table). Changing it to '{valid_periods[0]}'.")
-            self.period = valid_periods[0]
+        freq_key = f"CL_FREQ_{self.series.upper()}"
+        if freq_key in self.dim_dict.keys():
+            valid_periods = self.dim_dict[freq_key]["VALUE"].values
+            valid_periods_str = ", ".join(valid_periods)
+            if not (self.period in valid_periods):
+                logging.warning(f"Input period '{self.period}' is not valid (See CL_AREA_{self.series} output table). Changing it to '{valid_periods[0]}'.")
+                self.period = valid_periods[0]
 
         # validate start date and end date
         def _validate_date(date, date_des):
