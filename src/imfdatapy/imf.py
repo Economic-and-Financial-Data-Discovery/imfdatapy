@@ -80,6 +80,7 @@ class Series(ABC):
         self.des_list = []
         self.id_list = []
 
+        # Control for rate limits, `https://datahelp.imf.org/knowledgebase/articles/630877-data-services`
         self._max_requests = 3
         self._sleep_sec = 2
         self._max_indicators = 5
@@ -473,7 +474,7 @@ class IMF(Series):
             self.meta_df = self.clean_column_names(self.meta_df)
 
             # deduplicate
-            self.meta_df = self.meta_df.drop_duplicates(subset=["ID"], keep='last')
+            self.meta_df = self.meta_df.drop_duplicates(keep='last')
 
             self.output_meta(indicator="")
         else:
@@ -547,33 +548,68 @@ class IMF(Series):
         dcn_sa = list(self.meta_df["ID"].values)
         temp = pd.DataFrame()
 
-        dcn_sa_list = [dcn_sa[x:x + self._max_indicators] for x in range(0, len(dcn_sa), self._max_indicators)]
-        area_list = [self.countries[x:x + 1] for x in range(0, len(self.countries), 1)]
-        for cont in self.countries:
-            for indicators in dcn_sa_list:
-                logger.debug("Current country", cont)
-                url = f"{base}{self.period}.{cont}.{'+'.join(indicators)}{time}"
-                # url = f"{base}{period}..{'+'.join(indicators)}.{time}"
-                logger.debug(f"{url = }")
-                json = self.repeat_request(url)
-                if json is not None:
-                    try:
-                        response = json
-                        series = response['CompactData']['DataSet']['Series']
-                        temp_df = pd.DataFrame()
-                        if isinstance(series, dict):
-                            if isinstance(series.get("Obs"), list):
-                                temp_df = pd.concat([temp_df, pd.json_normalize(series.get("Obs"))])
-                            for k in series.keys():
+        if self.countries[0] == '':
+            dcn_sa_list = [dcn_sa[x:x + self._max_indicators] for x in range(0, len(dcn_sa), self._max_indicators)]
+        else:
+            dcn_sa_list = [dcn_sa[x:x + 1] for x in range(0, len(dcn_sa), 1)]
+
+        for cont, indicators in itertools.product(self.countries,  dcn_sa_list):
+            logger.debug("Current country", cont)
+            url = f"{base}{self.period}.{cont}.{'+'.join(indicators)}{time}"
+            # url = f"{base}{period}..{'+'.join(indicators)}.{time}"
+            logger.debug(f"{url = }")
+            json = self.repeat_request(url)
+            if json is not None:
+                try:
+                    response = json
+                    series = response['CompactData']['DataSet']['Series']
+                    temp_df = pd.DataFrame()
+                    if isinstance(series, dict):
+                        if isinstance(series.get("Obs"), list):
+                            temp_df = pd.concat([temp_df, pd.json_normalize(series.get("Obs"))])
+                        for k in series.keys():
+                            if k != "Obs":
+                                temp_df[k] = series.get(k)
+
+                        if temp_df.shape[0] > 0:
+                            temp_df = temp_df.rename(
+                                columns={
+                                    '@OBS_VALUE': 'Value',
+                                    '@INDICATOR': 'ID',
+                                    '@INDICATOR_CODE': 'ID',
+                                    '@REF_AREA': 'Country'
+                                }
+                            )
+                            temp_df['Period'] = pd.to_datetime(
+                                [row.replace('-', '') for row in temp_df['@TIME_PERIOD']]
+                            )
+                            temp_df.drop('@TIME_PERIOD', axis=1, inplace=True)
+
+                            temp = pd.concat([temp, temp_df], axis=0)
+                    elif isinstance(series, list):
+                        series_len = len(series)
+                        for n in range(0, series_len):
+                            temp_dic = series[n].get('Obs')
+
+                            temp_df = pd.DataFrame.from_dict(
+                                temp_dic
+                            ).rename(
+                                columns={
+                                    '@OBS_VALUE': 'Value',
+                                    '@OBS_STATUS': 'Status'
+                                }
+                            )
+
+                            for k in series[n].keys():
                                 if k != "Obs":
-                                    temp_df[k] = series.get(k)
+                                    temp_df[k] = series[n].get(k)
 
                             if temp_df.shape[0] > 0:
                                 temp_df = temp_df.rename(
                                     columns={
                                         '@OBS_VALUE': 'Value',
                                         '@INDICATOR': 'ID',
-                                        '@INDICATOR_CODE': 'ID',
+                                        '@REF_SECTOR': 'ID',  # for GFSR
                                         '@REF_AREA': 'Country'
                                     }
                                 )
@@ -583,42 +619,9 @@ class IMF(Series):
                                 temp_df.drop('@TIME_PERIOD', axis=1, inplace=True)
 
                                 temp = pd.concat([temp, temp_df], axis=0)
-                        elif isinstance(series, list):
-                            series_len = len(series)
-                            for n in range(0, series_len):
-                                temp_dic = series[n].get('Obs')
-
-                                temp_df = pd.DataFrame.from_dict(
-                                    temp_dic
-                                ).rename(
-                                    columns={
-                                        '@OBS_VALUE': 'Value',
-                                        '@OBS_STATUS': 'Status'
-                                    }
-                                )
-
-                                for k in series[n].keys():
-                                    if k != "Obs":
-                                        temp_df[k] = series[n].get(k)
-
-                                if temp_df.shape[0] > 0:
-                                    temp_df = temp_df.rename(
-                                        columns={
-                                            '@OBS_VALUE': 'Value',
-                                            '@INDICATOR': 'ID',
-                                            '@REF_SECTOR': 'ID',  # for GFSR
-                                            '@REF_AREA': 'Country'
-                                        }
-                                    )
-                                    temp_df['Period'] = pd.to_datetime(
-                                        [row.replace('-', '') for row in temp_df['@TIME_PERIOD']]
-                                    )
-                                    temp_df.drop('@TIME_PERIOD', axis=1, inplace=True)
-
-                                    temp = pd.concat([temp, temp_df], axis=0)
-                    except:
-                        logger.warning(f"Request for IMF data failed for area code, {cont}: {url = }.")
-                        pass
+                except:
+                    logger.warning(f"Request for IMF data failed for area code, {cont}: {url = }.")
+                    pass
 
         is_output = True
         if temp.shape[0] == 0:
@@ -638,7 +641,7 @@ class IMF(Series):
         self.data_df = pd.merge(self.data_df, self.meta_df, on="ID", how="left")
 
         # deduplicate
-        self.data_df =  self.data_df.drop_duplicates(subset=['ID', 'Country', 'Period'], keep='last')
+        self.data_df = self.data_df.drop_duplicates(keep='last')
 
         # sorting
         self.data_df.sort_values(by=["ID", "Country", 'Period'], axis=0, inplace=True)
@@ -695,7 +698,7 @@ class IMF(Series):
         if (area_key in self.dim_dict.keys()) and (self.dim_dict[area_key] is not None):
             valid_countries = self.dim_dict[area_key]["VALUE"].values
             if self.countries is None:
-                self.countries = valid_countries
+                self.countries = ['']
             rm_countries = []
             for c in self.countries:
                 if not (c in valid_countries):
