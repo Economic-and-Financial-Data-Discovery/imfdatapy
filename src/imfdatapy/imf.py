@@ -231,7 +231,9 @@ class IMF(Series):
         Returns:
           The filename and the search terms
         """
-        if len(self.search_terms) > 3:
+        if self.search_terms is None:
+            st_str = ""
+        elif len(self.search_terms) > 3:
             st_str = "_".join(self.search_terms[:3]) + f"_{len(self.search_terms) - 3}"
         else:
             st_str = "_".join(self.search_terms)
@@ -445,41 +447,43 @@ class IMF(Series):
                 self.read_meta_df()
 
         # finds the indicators by the search words
-        key = f"CodeList/{self.dimension_list[2]['@codelist']}"
-        json = self.repeat_request(url=f'{self.url}{key}')
-        if json is not None:
-            code_list = json['Structure']['CodeLists']['CodeList']['Code']
-            self.meta_df = pd.json_normalize(code_list)
+        if self.search_terms is not None:
+            key = f"CodeList/{self.dimension_list[2]['@codelist']}"
+            json = self.repeat_request(url=f'{self.url}{key}')
+            if json is not None:
+                code_list = json['Structure']['CodeLists']['CodeList']['Code']
+                self.meta_df = pd.json_normalize(code_list)
 
-            self.meta_df["search_found"] = False
-            string_columns = self.meta_df.select_dtypes(include=object).columns
-            for col, search_term in itertools.product(string_columns, self.search_terms):
-                logger.debug(f"{col = }, {search_term = }")
-                self.meta_df["search_found"] = self.meta_df["search_found"] | \
-                                               self.meta_df[col].str.lower().str.contains(search_term.lower())
-                logger.debug(self.meta_df["search_found"].describe())
-                logger.debug(self.meta_df[self.meta_df["search_found"]])
-            self.meta_df = self.meta_df[self.meta_df["search_found"]]
-            self.meta_df = self.meta_df.drop(['search_found'], axis=1)
+                self.meta_df["search_found"] = False
+                string_columns = self.meta_df.select_dtypes(include=object).columns
+                for col, search_term in itertools.product(string_columns, self.search_terms):
+                    logger.debug(f"{col = }, {search_term = }")
+                    self.meta_df["search_found"] = self.meta_df["search_found"] | \
+                                                   self.meta_df[col].str.lower().str.contains(search_term.lower())
+                    logger.debug(self.meta_df["search_found"].describe())
+                    logger.debug(self.meta_df[self.meta_df["search_found"]])
+                self.meta_df = self.meta_df[self.meta_df["search_found"]]
+                self.meta_df = self.meta_df.drop(['search_found'], axis=1)
 
-            if self.meta_df.shape[0] == 0:
-                logger.error(f"User input search terms {self.search_terms} not found in {self.series}. Please see columns 'VALUE' or 'DESCRIPTION.TEXT' in {self.outdir}meta_{self.series}.csv for valid values.")
-                return None
+            else:
+                logger.warning(f"Failed to download meta data.")
+                self.read_meta_df()
 
-            if "ID" not in self.meta_df.columns:
-                self.meta_df.columns = ["ID", *list(self.meta_df.columns)[1:]]
-            if "Description" not in self.meta_df.columns:
-                self.meta_df.columns = [*list(self.meta_df.columns)[:-1], "Description"]
-            logger.debug(f"{self.meta_df.shape = }")
-            self.meta_df = self.clean_column_names(self.meta_df)
+        if self.meta_df.shape[0] == 0:
+            logger.error(f"User input search terms {self.search_terms} not found in {self.series}. Please see columns 'VALUE' or 'DESCRIPTION.TEXT' in {self.outdir}meta_{self.series}.csv for valid values.")
+            return None
 
-            # deduplicate
-            self.meta_df = self.meta_df.drop_duplicates(keep='last')
+        if "ID" not in self.meta_df.columns:
+            self.meta_df.columns = ["ID", *list(self.meta_df.columns)[1:]]
+        if "Description" not in self.meta_df.columns:
+            self.meta_df.columns = [*list(self.meta_df.columns)[:-1], "Description"]
+        logger.debug(f"{self.meta_df.shape = }")
+        self.meta_df = self.clean_column_names(self.meta_df)
 
-            self.output_meta(indicator="")
-        else:
-            logger.warning(f"Failed to download meta data.")
-            self.read_meta_df()
+        # deduplicate
+        self.meta_df = self.meta_df.drop_duplicates(keep='last')
+
+        self.output_meta(indicator="")
 
         return self.meta_df
 
@@ -549,9 +553,9 @@ class IMF(Series):
         temp = pd.DataFrame()
 
         if self.countries[0] == '':
-            dcn_sa_list = [dcn_sa[x:x + self._max_indicators] for x in range(0, len(dcn_sa), self._max_indicators)]
-        else:
             dcn_sa_list = [dcn_sa[x:x + 1] for x in range(0, len(dcn_sa), 1)]
+        else:
+            dcn_sa_list = [dcn_sa[x:x + self._max_indicators] for x in range(0, len(dcn_sa), self._max_indicators)]
 
         for cont, indicators in itertools.product(self.countries,  dcn_sa_list):
             logger.debug("Current country", cont)
@@ -699,20 +703,20 @@ class IMF(Series):
             valid_countries = self.dim_dict[area_key]["VALUE"].values
             if self.countries is None:
                 self.countries = ['']
-            rm_countries = []
-            for c in self.countries:
-                if not (c in valid_countries):
-                    logger.warning(f"Input country '{c}' is not valid (see CL_AREA_{self.series}'s output table). Dropping it from input.")
-                    rm_countries.extend([c])
-            for c in rm_countries:
-                self.countries.remove(c)
-            if len(self.countries) == 0:
-                logger.warning(f"Input countries contains no valid entries. Setting it to [{valid_countries[0]}]")
-                self.countries = [valid_countries[0]]
+            else:
+                rm_countries = []
+                for c in self.countries:
+                    if not (c in valid_countries):
+                        logger.warning(f"Input country '{c}' is not valid (see CL_AREA_{self.series}'s output table). Dropping it from input.")
+                        rm_countries.extend([c])
+                for c in rm_countries:
+                    self.countries.remove(c)
+                if len(self.countries) == 0:
+                    logger.warning(f"Input countries contains no valid entries. Setting it to [{valid_countries[0]}]")
+                    self.countries = [valid_countries[0]]
 
         # validate serarch terms
-        if self.search_terms is None:
-            self.search_terms = self.meta_df.iloc[:, -1].values
+
 
     def clean_column_names(self, df):
         """

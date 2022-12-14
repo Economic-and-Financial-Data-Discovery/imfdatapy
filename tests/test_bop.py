@@ -5,7 +5,6 @@ class MyTestCase(unittest.TestCase):
 
 
     def test_imf_bop_eg1(self):
-
         bop = BOP(search_terms=["current account, total, credit"], countries=["US"], period='Q',
                   start_date="2000", end_date="2022")
         df = bop.download_data()
