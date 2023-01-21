@@ -8,6 +8,8 @@ date: '2022-11-27'
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# IMFData
+
 ## Install from archive
 
 Dependencies might need to be installed first.
@@ -55,5 +57,43 @@ GR.NGDP.query <- CompactDataMethod(databaseID, queryfilter, startdate, enddate,
 
 ```{r}
 GR.NGDP.query$Obs[[1]]
+```
+
+# imfr 
+
+## Install latest version from archive
+
+Dependencies might need to be installed first.
+
+```{r}
+packageurl <- "https://cran.r-project.org/src/contrib/Archive/imfr/imfr_0.1.9.tar.gz"
+install.packages(packageurl, repos=NULL, type="source")
+```
+
+```{r}
+library(imfr)
+```
+
+```{r}
+library(imfr)
+
+real_ex <- imf_data(database_id = 'IFS', indicator = 'EREER_IX',
+                    country = c('CN', 'GB'), freq = 'A',
+                    start = 2013, end = current_year())
+```
+
+```{r}
+real_ex
+```
+
+```{r}
+data_list <- imf_data(database_id = "DOT", indicator = "TXG_FOB_USD", 
+                      country = "US", return_raw = TRUE)
+```
+
+```{r}
+data_df <- data_list$CompactData$DataSet$Series
+
+names(data_df)
 ```
 
