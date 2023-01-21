@@ -1,5 +1,5 @@
 ---
-title: "IMFData_test"
+title: "Overview of existing R packages to retrieve IMF data"
 output: html_document
 date: '2022-11-27'
 ---
@@ -26,7 +26,9 @@ library(IMFData)
 ### DataflowMethod
 
 ```{r}
-availableDB <- DataflowMethod()
+#availableDB <- DataflowMethod()
+
+# error
 ```
 ### DataStructureMethod
 
