@@ -16,3 +16,7 @@ dependencies:
   - requests=2.28.1
   - pyquery=1.4.3
   - graphviz=2.50.0
+  - sphinx=5.3.0
+  - myst_nb=0.17.1
+  - autoapi=2.0.1
+  - sphinx_rtd_theme=1.1.1

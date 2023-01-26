@@ -17,7 +17,7 @@ author = u"Irina Klein, Sou-Cheng Choi"
 # ones.
 extensions = [
     "myst_nb",
-    "autoapi.extension",
+    #"autoapi.extension",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
 ]
