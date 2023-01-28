@@ -22,12 +22,13 @@ _uml:
 	mv classes.png docs/imfdatapy_classes_members.png
 
 doc_html:
-	sphinx-build -b html docs docs/_build
+	@cd docs && make clean && make html
 
 doc_pdf:
-	cd docs
-	make latexpdf
-	cd ..
+	@cd docs && make clean && make latexpdf
+
+doc_epub:
+	@cd docs && make clean && make epub
 
 tests:
 	python -W ignore -m coverage run --append --source=./ -m unittest discover -s tests/ 1>/dev/null
