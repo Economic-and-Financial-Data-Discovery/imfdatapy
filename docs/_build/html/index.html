@@ -82,21 +82,20 @@ This repository contains Python source code and Jupyter notebooks with examples 
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">imfdatapy</span></code> can be used to search through and extract data as follows. The examples below show how to search through the IFS (International Financial Statistics) and BOP (Balance of Payments) using <code class="docutils literal notranslate"><span class="pre">serach_terms</span></code> and download all the data with matching economic indicator names.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">src</span> <span class="kn">import</span> <span class="o">*</span>
-
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">imfdatapy.imf</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="n">ifs</span> <span class="o">=</span> <span class="n">IFS</span><span class="p">(</span><span class="n">search_terms</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;gross domestic product, real&quot;</span><span class="p">],</span> <span class="n">countries</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;US&quot;</span><span class="p">],</span> <span class="n">period</span><span class="o">=</span><span class="s1">&#39;Q&#39;</span><span class="p">,</span>
-          <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2000&quot;</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2022&quot;</span><span class="p">)</span>
+<span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2000&quot;</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2022&quot;</span><span class="p">)</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">ifs</span><span class="o">.</span><span class="n">download_data</span><span class="p">()</span>
 
 <span class="n">bop</span> <span class="o">=</span> <span class="n">BOP</span><span class="p">(</span><span class="n">search_terms</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;current account, total, credit&quot;</span><span class="p">],</span> <span class="n">countries</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;US&quot;</span><span class="p">],</span> <span class="n">period</span><span class="o">=</span><span class="s1">&#39;Q&#39;</span><span class="p">,</span>
-          <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2000&quot;</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2022&quot;</span><span class="p">)</span>
+<span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2000&quot;</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2022&quot;</span><span class="p">)</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">bop</span><span class="o">.</span><span class="n">download_data</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
 <section id="contributing">
 <h2>Contributing<a class="headerlink" href="#contributing" title="Permalink to this heading"></a></h2>
-<p>Interested in contributing? Check out the contributing guidelines. Please note that this project is released with a <span class="xref myst">Code of Conduct</span>. By contributing to this project, you agree to abide by its terms.</p>
+<p>Interested in contributing? Check out the contributing guidelines. Please note that this project is released with a <a class="reference internal" href="conduct.html"><span class="doc std std-doc">Code of Conduct</span></a>. By contributing to this project, you agree to abide by its terms.</p>
 </section>
 <section id="license">
 <h2>License<a class="headerlink" href="#license" title="Permalink to this heading"></a></h2>

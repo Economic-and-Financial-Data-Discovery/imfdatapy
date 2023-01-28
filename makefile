@@ -21,16 +21,13 @@ _uml:
 	pyreverse src/imfdatapy/imf.py -o png
 	mv classes.png docs/imfdatapy_classes_members.png
 
-
-
 doc_html:
-	sphinx-build -b html doc doc/build
+	sphinx-build -b html docs docs/_build
 
 doc_pdf:
-	sphinx-build -b latex doc doc/build -W --keep-going  2>/dev/null
-	cd doc/build/
-	latex doc/build/imfdatapy.tex
-	cd ../..
+	cd docs
+	make latexpdf
+	cd ..
 
 tests:
 	python -W ignore -m coverage run --append --source=./ -m unittest discover -s tests/ 1>/dev/null
