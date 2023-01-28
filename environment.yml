@@ -18,5 +18,4 @@ dependencies:
   - pyquery=1.4.3
   - graphviz=2.50.0
   - sphinx=5.3.0
-  - myst_nb=0.17.1
   - sphinx_rtd_theme=1.1.1
