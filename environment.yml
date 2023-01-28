@@ -19,3 +19,5 @@ dependencies:
   - graphviz=2.50.0
   - sphinx=5.3.0
   - sphinx_rtd_theme=1.1.1
+  - pip:
+    - myst-nb==0.16.0

@@ -9,6 +9,7 @@
 project = u"imfdatapy"
 copyright = u"2022, Irina Klein, Sou-Cheng Choi"
 author = u"Irina Klein, Sou-Cheng Choi"
+version = u"1.0"
 
 # -- General configuration ---------------------------------------------------
 
