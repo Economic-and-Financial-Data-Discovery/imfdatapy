@@ -1,13 +1,11 @@
-
 import logging.config
 from datetime import datetime
 import os
 
-
 time_stamp = str(datetime.now())[:19].replace(" ", "-").replace(":", "-")
 cwd = os.getcwd()
 is_file_logger = True
-if (cwd[-3:]=="src") or (cwd[-4:]=="demo") or (cwd[-5:]=="tests"):
+if (cwd[-3:] == "src") or (cwd[-4:] == "demo") or (cwd[-5:] == "tests"):
     logdir = "../log"
 elif cwd[-9:] == "imfdatapy":
     logdir = "../../log"
