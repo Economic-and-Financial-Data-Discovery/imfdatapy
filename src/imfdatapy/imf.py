@@ -4,13 +4,11 @@ Updated Date: Dec 7, 2022
 Creation Date: Jun 15, 2022
 
 """
-import itertools
-import logging
-import logging.config
+
 import os
 import time as tm
 from abc import ABC, abstractmethod
-from datetime import datetime
+
 from os import mkdir
 from os import path
 import itertools
@@ -20,17 +18,13 @@ import requests
 
 MAX_FILENAME_LEN = 260
 
-# Create logger
-log_file_path = path.join(path.dirname(path.abspath(__file__)), 'logging.conf')
-logging.config.fileConfig(log_file_path, disable_existing_loggers=False)
-logger = logging.getLogger(__name__) # TODO is it logger or logging later
-time_stamp = str(datetime.now())[:16].replace(" ", "-").replace(":", "-")
-# Doesn't create new directory in colab
-logdir = '../../log'
-if not path.exists(logdir):
-    mkdir(logdir)
-logging.basicConfig(filename=f'{logdir}/imf_{time_stamp}.log', encoding='utf-8', level=logging.info)
-
+try:
+    from .imf_log import *
+except:
+    try:
+        from imf_log import *
+    except:
+        print(f"WARN: Failed to create log file.")
 
 # abstract class
 class Series(ABC):
