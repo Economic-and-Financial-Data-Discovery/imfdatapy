@@ -21,3 +21,4 @@ dependencies:
   - sphinx_rtd_theme=1.1.1
   - pip:
     - myst-nb==0.16.0
+    - sphinx-autoapi==2.0.1
