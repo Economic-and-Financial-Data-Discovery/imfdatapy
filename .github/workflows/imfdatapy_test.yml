@@ -31,11 +31,9 @@ jobs:
           miniforge-variant: ${{ matrix.miniforge-variant }}
           miniforge-version: ${{ matrix.miniforge-version }}
           use-mamba: true
-      - name: Install imfdatapy
-        run: |
-          pip install -e .
       - name: Test with pytest
         run: |
+          pip install -e .
           conda install pytest
           conda install pytest-cov
           pytest tests/ --doctest-modules --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html
