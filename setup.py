@@ -12,7 +12,7 @@ class CustomInstall(install):
         try:
             os.system('pip install -e .')
         except:
-            print('Problem installing imf')
+            print('Problem installing imfdatapy')
         # compile files used for docuemtnation
         #try:
         #    os.system('make _doc')
