@@ -32,7 +32,7 @@ jobs:
           use-mamba: true
       - name: Test with pytest
         run: |
-          source /Users/runner/miniconda3/etc/profile.d/conda.sh
+          source $CONDA/etc/profile.d/conda.sh
           conda info --envs
           conda activate test
           conda list
