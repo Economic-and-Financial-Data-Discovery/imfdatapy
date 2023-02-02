@@ -32,6 +32,8 @@ jobs:
           use-mamba: true
       - name: Test with pytest
         run: |
+          source shell_script.sh
+          conda info --envs
           conda deactivate
           conda activate imfdatapy
           conda list
