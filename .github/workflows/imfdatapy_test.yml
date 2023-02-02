@@ -32,4 +32,7 @@ jobs:
           use-mamba: true
       - name: Test with pytest
         run: |
+          conda deactivate
+          conda activate imfdatapy
+          conda list
           pytest tests/ --doctest-modules --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html
