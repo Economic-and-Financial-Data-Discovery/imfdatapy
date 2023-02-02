@@ -32,6 +32,4 @@ jobs:
           use-mamba: true
       - name: Test with pytest
         run: |
-          conda install pytest
-          conda install pytest-cov
           pytest tests/ --doctest-modules --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html
