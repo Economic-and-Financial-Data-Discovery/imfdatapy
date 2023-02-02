@@ -36,4 +36,5 @@ jobs:
         run: |
           conda list
           pip install pytest pytest-cov
+          pip install -e .
           pytest tests/ --doctest-modules --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html
