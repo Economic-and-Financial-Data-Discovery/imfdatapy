@@ -32,9 +32,8 @@ jobs:
           use-mamba: true
       - name: Test with pytest
         run: |
-          conda init bash
+          source /Users/runner/miniconda3/etc/profile.d/conda.sh
           conda info --envs
-          conda deactivate
-          conda activate imfdatapy
+          conda activate test
           conda list
           pytest tests/ --doctest-modules --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html
