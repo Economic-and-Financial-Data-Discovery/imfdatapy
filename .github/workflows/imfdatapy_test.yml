@@ -19,8 +19,7 @@ jobs:
             environment-file: environment.yml
             miniforge-variant: Mambaforge-pypy3
           - os: windows
-            environment-file: etc/example-explicit.Windows.conda.lock
-            condarc-file: environment.yml
+            environment-file: environment.yml
             miniforge-variant: Mambaforge
     steps:
       - uses: actions/checkout@v2
@@ -33,7 +32,6 @@ jobs:
           use-mamba: true
       - name: Test with pytest
         run: |
-          pip install -e .
           conda install pytest
           conda install pytest-cov
           pytest tests/ --doctest-modules --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html
