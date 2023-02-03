@@ -30,5 +30,11 @@ doc_pdf:
 doc_epub:
 	@cd docs && make clean && make epub
 
-tests:
+longtests:
 	pytest tests/ --doctest-modules --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html
+
+coverage:
+	@echo "\nCode coverage"
+	python -m coverage report -m
+
+tests: longtests coverage
