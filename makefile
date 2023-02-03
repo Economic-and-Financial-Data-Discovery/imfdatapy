@@ -31,14 +31,13 @@ doc_epub:
 	@cd docs && make clean && make epub
 
 fasttests:
-	pytest tests/test_dot.py --junitxml=junit/test_dot-results.xml --cov-report=html
+	coverage run -m pytest tests/test_dot.py
 
 longtests:
-	pytest tests/ --doctest-modules --junitxml=junit/test-results.xml --cov-report=html
+	coverage run -m pytest
 
 tests: longtests
 
 coverage:
 	@echo "\nCode coverage"
-    coverage run -m pytest
 	python -m coverage report -m
