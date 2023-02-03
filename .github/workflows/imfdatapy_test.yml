@@ -27,3 +27,9 @@ jobs:
         shell: bash -l {0}
         run: |
           make fasttests
+      - name: Upload to Codecov
+        shell: bash -l {0}
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-report
+          path: htmlcov

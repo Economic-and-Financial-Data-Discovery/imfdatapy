@@ -38,6 +38,7 @@ longtests:
 
 tests: longtests
 
-coverage:
+coverage: longtests
 	@echo "\nCode coverage"
 	python -m coverage report -m
+	coverage html
