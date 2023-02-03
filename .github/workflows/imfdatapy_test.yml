@@ -27,7 +27,7 @@ jobs:
         shell: bash -l {0}
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
-            make tests
+            make fasttests
           else
-            make tests
+            make fasttests
           fi
