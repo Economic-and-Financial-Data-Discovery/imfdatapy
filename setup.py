@@ -1,3 +1,4 @@
+# requires  pyproject.toml
 import setuptools
 from setuptools.command.install import install
 from setuptools import Command

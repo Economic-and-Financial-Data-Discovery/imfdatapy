@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "imfdatapy"
-version = "0.1.5"
+version = "1.0.0"
 description = "A package for data discovery and extraction from the IMF!"
 authors = ["Irina Klein, Sou-Cheng T. Choi"]
 license = "Apache v2.0"
