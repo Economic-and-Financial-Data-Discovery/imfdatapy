@@ -31,4 +31,4 @@ doc_epub:
 	@cd docs && make clean && make epub
 
 tests:
-	python -W ignore -m coverage run --append --source=./ -m unittest discover -s tests/ 1>/dev/null
+	pytest tests/ --doctest-modules --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html
