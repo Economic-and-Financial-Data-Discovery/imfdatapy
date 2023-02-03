@@ -17,6 +17,3 @@ class MyTestCase(unittest.TestCase):
         self.assertGreaterEqual(df.shape[0], 14784)
         meta_df = gfsr.get_meta()
         self.assertGreaterEqual(meta_df.shape[0], 4)
-
-if __name__ == '__main__':
-    unittest.main()

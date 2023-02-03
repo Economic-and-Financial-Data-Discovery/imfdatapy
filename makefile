@@ -1,3 +1,15 @@
+nbdir = docs/demo_md/
+
+_doc: #  gets run by docs/conf.py so we don't need to commit files in $(nbdir)
+	# Remove and make directory
+	@rm -r -f $(nbdir)
+	@mkdir $(nbdir)
+	@for f in demo/imfdatapy*.ipynb; do \
+		echo "#\tConverting $$f"; \
+		jupyter nbconvert --to markdown --output-dir='$(nbdir)' $$f 2>/dev/null; \
+	done
+	#jupyter nbconvert --to markdown --output-dir='$(nbdir)'  demo/imfdatapy_demo.ipynb
+	#jupyter nbconvert --to markdown --output-dir='$(nbdir)'  demo/imfdatapy_IFS_GDP_example.ipynb
 
 uninstall_imf:
 	cd ..
@@ -21,13 +33,13 @@ _uml:
 	pyreverse src/imfdatapy/imf.py -o png
 	mv classes.png docs/imfdatapy_classes_members.png
 
-doc_html:
+doc_html: _doc _uml
 	@cd docs && make clean && make html
 
-doc_pdf:
+doc_pdf: _doc _uml
 	@cd docs && make clean && make latexpdf
 
-doc_epub:
+doc_epub: _doc _uml
 	@cd docs && make clean && make epub
 
 fasttests:
@@ -36,9 +48,13 @@ fasttests:
 longtests:
 	coverage run -m pytest
 
-tests: longtests
-
-coverage: longtests
+coverage:
 	@echo "\nCode coverage"
+	@rm -r -f htmlcov
 	python -m coverage report -m
 	coverage html
+
+fasttests_cov: fasttests coverage
+
+
+longtests_cov: longtests coverage

@@ -11,7 +11,3 @@ class MyTestCase(unittest.TestCase):
         self.assertGreaterEqual(df.shape[0], 90)
         meta_df = bop.get_meta()
         self.assertGreaterEqual(meta_df.shape[0], 6)
-
-
-if __name__ == '__main__':
-    unittest.main()

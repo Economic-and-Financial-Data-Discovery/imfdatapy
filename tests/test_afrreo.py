@@ -10,7 +10,3 @@ class MyTestCase(unittest.TestCase):
         self.assertGreaterEqual(df.shape[0], 20)
         meta_df = affreo.get_meta()
         self.assertGreaterEqual(meta_df.shape[0], 1)
-
-
-if __name__ == '__main__':
-    unittest.main()
