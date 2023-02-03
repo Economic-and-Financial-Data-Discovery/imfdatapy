@@ -14,7 +14,7 @@ class MyTestCase(unittest.TestCase):
         self.assertGreaterEqual(meta_df.shape[0], 3)
         self.assertGreaterEqual(meta_df.shape[1], 3)
 
-    def test_eg1(self):
+    def test_eg2(self):
         # test for getting all countries for a given IFS code
         ifs = IFS(search_terms=None, countries=["US"], period="Q", start_date=None, end_date=None)
         df = ifs.download_data()
