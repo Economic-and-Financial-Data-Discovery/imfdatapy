@@ -1,16 +1,5 @@
 nbdir = docs/demo_md/
 
-_doc: #  gets run by docs/conf.py so we don't need to commit files in $(nbdir)
-	# Remove and make directory
-	@rm -r -f $(nbdir)
-	@mkdir $(nbdir)
-	@for f in demo/imfdatapy*.ipynb; do \
-		echo "#\tConverting $$f"; \
-		jupyter nbconvert --to markdown --output-dir='$(nbdir)' $$f 2>/dev/null; \
-	done
-	#jupyter nbconvert --to markdown --output-dir='$(nbdir)'  demo/imfdatapy_demo.ipynb
-	#jupyter nbconvert --to markdown --output-dir='$(nbdir)'  demo/imfdatapy_IFS_GDP_example.ipynb
-
 uninstall_imf:
 	cd ..
 	rm -fr IMF_data_discovery
@@ -33,14 +22,31 @@ _uml:
 	pyreverse src/imfdatapy/imf.py -o png
 	mv classes.png docs/imfdatapy_classes_members.png
 
-doc_html: _doc _uml
-	@cd docs && make clean && make html
 
-doc_pdf: _doc _uml
-	@cd docs && make clean && make latexpdf
+_doc: #  gets run by docs/conf.py so we don't need to commit files in $(nbdir)
+	# Remove and make directory
+	@rm -r -f $(nbdir)
+	@mkdir $(nbdir)
+	@for f in demo/imfdatapy*.ipynb; do \
+		echo "#\tConverting $$f"; \
+		jupyter nbconvert --to markdown --output-dir='$(nbdir)' $$f 2>/dev/null; \
+	done
+	#jupyter nbconvert --to markdown --output-dir='$(nbdir)'  demo/imfdatapy_demo.ipynb
+	#jupyter nbconvert --to markdown --output-dir='$(nbdir)'  demo/imfdatapy_IFS_GDP_example.ipynb
 
-doc_epub: _doc _uml
-	@cd docs && make clean && make epub
+_doc_clean:
+	@cd docs && make clean
+
+doc_html:
+	@cd docs && make html
+
+doc_pdf:
+	@cd docs && make latexpdf
+
+doc_epub:
+	@cd docs && make epub
+
+docs: _doc_clean _doc _uml doc_html doc_pdf doc_epub
 
 fasttests:
 	coverage run -m pytest tests/test_dot.py

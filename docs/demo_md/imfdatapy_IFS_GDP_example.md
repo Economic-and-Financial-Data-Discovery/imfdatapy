@@ -1,37 +1,15 @@
-# Extraction of International Financial Statistics data from the IMF using **imfdatapy**
+# Extraction of International Financial Statistics data from the IMF
 
 The example below retrieves quarterly (period: Q) Seasonally Adjusted Real Gross Domestic Product (indicator: NGDP_R_SA_XDC) for the USA (country code: US), from the International Financial Statistics (IFS) series using the **imfdatapy** package. The function call returns the observation values, and the time period for each value (in the format YYYY-MM-DD).
 
 First, we begin with loading the **imfdatapy** library for data extraction and from the IMF and **pandas** for data manipulation.
 
-## imfdatapy package
+##  `**imfdatapy**` package 
 
-Source code is available on [Github](https://github.com/Economic-and-Financial-Data-Discovery/imfdatapy).
+Source code foris available on [Github](https://github.com/Economic-and-Financial-Data-Discovery/imfdatapy).
 
 The package can be installed using ```pip```.
-
-
-```python
 !pip install imfdatapy
-```
-
-    Looking in indexes: https://pypi.org/simple, https://us-python.pkg.dev/colab-wheels/public/simple/
-    Collecting imfdatapy
-      Downloading imfdatapy-0.1.5-py3-none-any.whl (7.0 kB)
-    Requirement already satisfied: pandas>=1.3.5 in /usr/local/lib/python3.8/dist-packages (from imfdatapy) (1.3.5)
-    Requirement already satisfied: numpy>=1.21.6 in /usr/local/lib/python3.8/dist-packages (from imfdatapy) (1.21.6)
-    Requirement already satisfied: requests>=2.23.0 in /usr/local/lib/python3.8/dist-packages (from imfdatapy) (2.23.0)
-    Requirement already satisfied: python-dateutil>=2.7.3 in /usr/local/lib/python3.8/dist-packages (from pandas>=1.3.5->imfdatapy) (2.8.2)
-    Requirement already satisfied: pytz>=2017.3 in /usr/local/lib/python3.8/dist-packages (from pandas>=1.3.5->imfdatapy) (2022.6)
-    Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.8/dist-packages (from python-dateutil>=2.7.3->pandas>=1.3.5->imfdatapy) (1.15.0)
-    Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.8/dist-packages (from requests>=2.23.0->imfdatapy) (2022.9.24)
-    Requirement already satisfied: urllib3!=1.25.0,!=1.25.1,<1.26,>=1.21.1 in /usr/local/lib/python3.8/dist-packages (from requests>=2.23.0->imfdatapy) (1.24.3)
-    Requirement already satisfied: chardet<4,>=3.0.2 in /usr/local/lib/python3.8/dist-packages (from requests>=2.23.0->imfdatapy) (3.0.4)
-    Requirement already satisfied: idna<3,>=2.5 in /usr/local/lib/python3.8/dist-packages (from requests>=2.23.0->imfdatapy) (2.10)
-    Installing collected packages: imfdatapy
-    Successfully installed imfdatapy-0.1.5
-
-
 
 ```python
 from imfdatapy.imf import *

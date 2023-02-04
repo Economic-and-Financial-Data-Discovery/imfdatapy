@@ -9,7 +9,7 @@
 project = u"imfdatapy"
 copyright = u"2022, Irina Klein, Sou-Cheng Choi"
 author = u"Irina Klein, Sou-Cheng Choi"
-version = u"1.0"
+version = u"1.0.0"
 
 # -- General configuration ---------------------------------------------------
 
@@ -27,7 +27,7 @@ autoapi_dirs = ["../src"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "__init__"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "__init__.py"]
 
 # -- Options for HTML output -------------------------------------------------
 
