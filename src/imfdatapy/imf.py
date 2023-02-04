@@ -74,10 +74,13 @@ class Series(ABC):
         self.des_list = []
         self.id_list = []
 
+        self._indicator_dim_position = 2
+
         # Control for rate limits, `https://datahelp.imf.org/knowledgebase/articles/630877-data-services`
         self._max_requests = 3
         self._sleep_sec = 2
         self._max_indicators = 5
+
 
         # Doesn't create new directory in colab
         self.outdir = outdir if outdir is not None else f"..{os.sep}out{os.sep}"
@@ -328,6 +331,8 @@ class IMF(Series):
                 is_output = True
                 try:
                     dim_name = self.dimension_list[n]['@codelist']
+                    if 'INDICATOR' in dim_name:
+                        self._indicator_dim_position = n
                     key = f"CodeList/{dim_name}"
                     if dim_name[:7] in ["CL_FREQ"]:
                         def _get_metadata(series='IFS'):
@@ -430,7 +435,7 @@ class IMF(Series):
             logger.debug(dim_meta_df.head())
 
             # download  meta data
-            key = f"CodeList/{self.dimension_list[2]['@codelist']}"
+            key = f"CodeList/{self.dimension_list[self._indicator_dim_position]['@codelist']}"
             json = self.repeat_request(url=f'{self.url}{key}')
             if json is not None:
                 code_list = json['Structure']['CodeLists']['CodeList']['Code']
@@ -442,7 +447,7 @@ class IMF(Series):
 
         # finds the indicators by the search words
         if self.search_terms is not None:
-            key = f"CodeList/{self.dimension_list[2]['@codelist']}"
+            key = f"CodeList/{self.dimension_list[self._indicator_dim_position]['@codelist']}"
             json = self.repeat_request(url=f'{self.url}{key}')
             if json is not None:
                 code_list = json['Structure']['CodeLists']['CodeList']['Code']
@@ -553,7 +558,8 @@ class IMF(Series):
 
         for cont, indicators in itertools.product(self.countries,  dcn_sa_list):
             logger.debug("Current country", cont)
-            url = f"{base}{self.period}.{cont}.{'+'.join(indicators)}{time}"
+            url = f"{base}{self.period}.{cont}{'.'*(self._indicator_dim_position-1)}{'+'.join(indicators)}{time}"
+            logger.info(f"URL is {url}")
             # url = f"{base}{period}..{'+'.join(indicators)}.{time}"
             logger.debug(f"{url = }")
             json = self.repeat_request(url)
