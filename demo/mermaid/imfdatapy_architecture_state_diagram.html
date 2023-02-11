@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@8.9.0/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+  </head>
+  <body>
+    <div class="mermaid">
+      stateDiagram
+        [*] --> user
+        user --> imfdatapy: inputs
+        imfdatapy --> JSON: requests to IMF server
+        imfdatapy --> table: look up local info
+		JSON --> table
+		table --> statistics
+		table --> visualization
+    </div>
+  </body>
+</html>

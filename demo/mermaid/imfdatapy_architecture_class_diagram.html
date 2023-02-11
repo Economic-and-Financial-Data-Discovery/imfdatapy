@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@8.9.0/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+  </head>
+  <body>
+    <div class="mermaid">
+      classDiagram
+        class ABC {
+        }
+
+        class Series {
+            +search_terms: array
+            +countries: array
+            +start_date: int
+        	+end_date: int
+        }
+
+        class IMF {
+
+        }
+
+        class IFS {
+        }
+
+        ABC --> Series
+        Series --> IMF
+        IMF --> IFS
+        IMF --> Others
+    </div>
+  </body>
+</html>

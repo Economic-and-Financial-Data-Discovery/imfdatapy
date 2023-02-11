@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@8.9.0/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+  </head>
+  <body>
+    <div class="mermaid">
+      sequenceDiagram
+        participant imfdatapy
+        participant IMF server
+        imfdatapy->>IMF server: Meta data request for series
+        IMF server-->>imfdatapy: JSON
+        imfdatapy->>IMF server: mMta data request for dimensions
+        IMF server-->>imfdatapy: JSON
+        imfdatapy->>IMF server:  Data request for series
+        IMF server-->>imfdatapy: JSON
+    </div>
+  </body>
+</html>
