@@ -24,3 +24,4 @@ dependencies:
   - pip:
     - myst-nb==0.16.0
     - sphinx-autoapi==2.0.1
+    - jupyter-nbextensions_configurator==0.6.1

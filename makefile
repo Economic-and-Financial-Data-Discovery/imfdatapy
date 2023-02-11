@@ -1,15 +1,17 @@
 nbdir = docs/demo_md/
 
-uninstall_imf:
+uninstall_imfdatapy:
 	cd ..
-	rm -fr IMF_data_discovery
+	rm -fr imfdatapy
 	conda deactivate
-	conda remove --name imf --all
+	conda remove --name imfdatapy --all
 
-install_imf:
+download_imfdatapy:
 	git clone https://github.com/Economic-and-Financial-Data-Discovery/imfdatapy.git
 	cd imfdatapy
 	git checkout develop
+
+install_imf:
 	conda env create --file environment.yml
 	conda activate imfdatapy
 	jupyter nbextensions_configurator enable --user
