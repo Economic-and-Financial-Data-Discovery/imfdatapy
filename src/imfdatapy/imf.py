@@ -76,7 +76,7 @@ class Series(ABC):
 
         # Control for rate limits, `https://datahelp.imf.org/knowledgebase/articles/630877-data-services`
         self._max_requests = 3
-        self._sleep_sec = 2
+        self._sleep_sec = 0.5  # 10 requests in 5s per user (IP) & 50 requests per second per app, https://datahelp.imf.org/knowledgebase/articles/630877-data-services
         self._max_indicators = 5
 
         # Doesn't create new directory in colab
