@@ -27,4 +27,4 @@ jobs:
       - name: Run Tests
         shell: bash -l {0}
         run: |
-          make fasttests
+          make longtests
