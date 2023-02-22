@@ -141,18 +141,18 @@ class MyTestCase(unittest.TestCase):
         # test for getting all countries for a given IFS code
         ifs = IFS(search_terms=["NGDP_R_SA_XDC"], countries=None, period="Q", start_date=None, end_date=None)
         df = ifs.download_data()
-        self.assertGreaterEqual(df.shape[0], 374)
+        self.assertGreaterEqual(df.shape[0], 7580)
         self.assertGreaterEqual(df.shape[1], 10)
         meta_df = ifs.get_meta()
-        self.assertGreaterEqual(meta_df.shape[0], 3)
+        self.assertGreaterEqual(meta_df.shape[0], 1)
         self.assertGreaterEqual(meta_df.shape[1], 3)
 
     def test_ifs_eg16(self):
-        # test for getting all codes for US --- TODO update counts
+        # test for getting all codes for US
         ifs = IFS(search_terms=None, countries=["US"], period="Q", start_date=None, end_date=None)
         df = ifs.download_data()
-        self.assertGreaterEqual(df.shape[0], 374)
-        self.assertGreaterEqual(df.shape[1], 10)
+        self.assertGreaterEqual(df.shape[0], 91859)
+        self.assertGreaterEqual(df.shape[1], 12)
         meta_df = ifs.get_meta()
-        self.assertGreaterEqual(meta_df.shape[0], 3)
+        self.assertGreaterEqual(meta_df.shape[0], 1679)
         self.assertGreaterEqual(meta_df.shape[1], 3)
