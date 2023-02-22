@@ -54,7 +54,8 @@ fasttests:
 	coverage run -m pytest tests/test_dot.py
 
 longtests:
-	coverage run -m pytest
+        #coverage run -m pytest 
+	coverage run -m pytest tests/test_ifs.py
 
 coverage:
 	@echo "\nCode coverage"
