@@ -149,3 +149,5 @@ dmypy.json
 ignore_package
 _src
 
+# sc's local ignore
+_sc_files/*
