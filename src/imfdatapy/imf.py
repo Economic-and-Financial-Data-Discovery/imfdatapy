@@ -16,6 +16,10 @@ import itertools
 import pandas as pd
 import requests
 
+import cProfile
+import pstats
+
+
 MAX_FILENAME_LEN = 260
 
 try:
@@ -896,7 +900,15 @@ class HPDD(IMF):
 
 #
 if __name__ == '__main__':
-    ifs = IFS(search_terms=["Gross Domestic Product, Real"], countries=["US", "DE"],
-              period='Q', start_date="2000", end_date="2022", outdir=f"..{os.sep}..{os.sep}out{os.sep}")
-    df = ifs.download_data()
-    df_summary = ifs.describe_data()
+    with cProfile.Profile() as profile:
+        ifs = IFS(search_terms=["Gross Domestic Product, Real"], countries=["US", "DE"],
+                  period='Q', start_date="2000", end_date="2022", outdir=f"..{os.sep}..{os.sep}out{os.sep}")
+        df = ifs.download_data()
+        df_summary = ifs.describe_data()
+    results = pstats.Stats(profile)
+    # Sorting by Total_Time
+    # results.sort_stats(pstats.SortKey.TIME)
+    # Sorting by Cumulative_Time
+    results.sort_stats(pstats.SortKey.CUMULATIVE)
+    results.print_stats()
+#    results.dump_stats("results.prof")
