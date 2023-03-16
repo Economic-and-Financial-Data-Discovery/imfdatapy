@@ -29,7 +29,7 @@ except:
 
 class Series(ABC):
 
-    def __init__(self, series='IFS', search_terms=None, countries=None, period='Q', start_date=None, end_date=None, outdir=None, logdir=None):
+    def __init__(self, series='IFS', search_terms=None, countries=None, period='Q', start_date=None, end_date=None, outdir=None, logdir=None, is_log_to_file=True):
 
         input_str = ""
         if series is not None:
@@ -46,7 +46,15 @@ class Series(ABC):
             input_str += f", {outdir = }"
         if logdir is not None:
             input_str += f", {logdir = }"
-        logger.info(f"Inputs: {input_str}")
+        if is_log_to_file is not None:
+            input_str += f", {is_log_to_file = }"
+
+
+        self.logdir = logdir
+        self.is_log_to_file = is_log_to_file
+        logfile = LogFile(logdir=self.logdir, is_log_to_file=self.is_log_to_file)
+        self.logger = logfile.start_log()
+        self.logger.info(f"Inputs: {input_str}")
 
         self.series = series
         self.search_terms = search_terms
@@ -64,6 +72,7 @@ class Series(ABC):
         self.des_list = []
         self.id_list = []
 
+
         # Control for rate limits, `https://datahelp.imf.org/knowledgebase/articles/630877-data-services`
         self._max_requests = 3
         self._sleep_sec = 1  # 10 requests in 5s per user (IP) & 50 requests per second per app
@@ -71,13 +80,9 @@ class Series(ABC):
 
         # Output and log directories
         self.outdir = outdir if outdir is not None else f"..{os.sep}out{os.sep}"
+        self.outdir = f"{self.outdir}{os.sep}" if self.outdir[-1] != os.sep else self.outdir
         if not os.path.exists(self.outdir):
             os.mkdir(self.outdir)
-
-        self.logdir = logdir if logdir is not None else f"..{os.sep}log{os.sep}"
-        if not os.path.exists(self.logdir):
-            os.mkdir(self.logdir)
-        logging.basicConfig(filename=f"{self.logdir}imf.log", level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
         # # Set default output and log directories
         # self.outdir = outdir if outdir is not None else '..\\out\\'
@@ -149,7 +154,7 @@ class Series(ABC):
             input_str += f", {end_date = }"
         if outdir is not None:
             input_str += f", {outdir = }"
-        logger.info(f"Inputs: {input_str}")
+        self.logger.info(f"Inputs: {input_str}")
 
         self.series = series
         self.search_terms = search_terms
@@ -229,11 +234,11 @@ class IMF(Series):
         if (self.series_df.shape[0] > 0) and (self.series_df.shape[1] > 0):
             self.series_df.to_csv(outfile_path, index=False)
             if series is None:
-                logger.info(f"Output all IMF series in a {self.series_df.shape} table to {outfile_path}")
+                self.logger.info(f"Output all IMF series in a {self.series_df.shape} table to {outfile_path}")
             else:
-                logger.info(f"Output series containing '{series}' in a {self.series_df.shape} table to {outfile_path}")
+                self.logger.info(f"Output series containing '{series}' in a {self.series_df.shape} table to {outfile_path}")
         else:
-            logger.warning(f"No series data to be output")
+            self.logger.warning(f"No series data to be output")
 
     def output_dim(self, dim_name=None):
         """
@@ -247,17 +252,17 @@ class IMF(Series):
                 outfile_path = f"{self.outdir}dim_{key.lower()}.csv"
                 if (self.dim_dict[key].shape[0] > 0) and (self.dim_dict[key].shape[1] > 0):
                     self.dim_dict[key].to_csv(outfile_path, index=False)
-                    logger.info(f"Output dimension {key} in a {self.dim_dict[key].shape} table to {outfile_path}")
+                    self.logger.info(f"Output dimension {key} in a {self.dim_dict[key].shape} table to {outfile_path}")
                 else:
-                    logger.warning(f"No dimension {key} data to be output.")
+                    self.logger.warning(f"No dimension {key} data to be output.")
         else:
             key = dim_name
             outfile_path = f"{self.outdir}dim_{key.lower()}.csv"
             if (self.dim_dict[key].shape[0] > 0) and (self.dim_dict[key].shape[1] > 0):
                 self.dim_dict[key].to_csv(outfile_path, index=False)
-                logger.info(f"Output dimension {key} in a {self.dim_dict[key].shape} table to {outfile_path}")
+                self.logger.info(f"Output dimension {key} in a {self.dim_dict[key].shape} table to {outfile_path}")
             else:
-                logger.warning(f"No dimension {key} data to be output.")
+                self.logger.warning(f"No dimension {key} data to be output.")
 
     def output_meta(self, indicator=None):
         """
@@ -275,11 +280,11 @@ class IMF(Series):
         if (self.meta_df.shape[0] > 0) and (self.meta_df.shape[1] > 0):
             self.meta_df.to_csv(outfile_path, index=False)
             if indicator is None:
-                logger.info(f"Output meta data of {self.series} in a {self.meta_df.shape} table to {outfile_path}")
+                self.logger.info(f"Output meta data of {self.series} in a {self.meta_df.shape} table to {outfile_path}")
             else:
-                logger.info(f"Output meta data of {self.series} with search search_terms {self.search_terms} in a {self.meta_df.shape} table to {outfile_path}")
+                self.logger.info(f"Output meta data of {self.series} with search search_terms {self.search_terms} in a {self.meta_df.shape} table to {outfile_path}")
         else:
-            logger.warning(f"No meta data to be output.")
+            self.logger.warning(f"No meta data to be output.")
 
     def output_data(self, is_gen_filename=False):
         """
@@ -301,11 +306,11 @@ class IMF(Series):
         if (self.data_df.shape[0] > 0) and (self.data_df.shape[1] > 0):
             self.data_df.to_csv(outfile_path, index=False)
             if not is_gen_filename:
-                logger.info(f"Output data of {self.series} in a {self.data_df.shape} table to {outfile_path}")
+                self.logger.info(f"Output data of {self.series} in a {self.data_df.shape} table to {outfile_path}")
             else:
-                logger.info(f"Output data of {self.series} containing '{st_str}' in a {self.data_df.shape} table to {outfile_path}")
+                self.logger.info(f"Output data of {self.series} containing '{st_str}' in a {self.data_df.shape} table to {outfile_path}")
         else:
-            logger.warning(f"No data to be output.")
+            self.logger.warning(f"No data to be output.")
 
     def gen_data_filename(self, is_meta=False):
         """
@@ -371,28 +376,28 @@ class IMF(Series):
         else:
             infile = f"{self.outdir}series_{self.series.lower()}.csv"
             self.series_df = pd.read_csv(infile)
-            logger.info(f"Read series names from historical data {infile}")
+            self.logger.info(f"Read series names from historical data {infile}")
             is_output = False
 
         # Filter the dataframe to only include the series names we want
         self.series_df["search_found"] = False
         string_columns = self.series_df.select_dtypes(include=object).columns
         for col, search_term in itertools.product(string_columns, [search_terms]):
-            logger.debug(f"{col = }, {search_term = }")
+            self.logger.debug(f"{col = }, {search_term = }")
             self.series_df["search_found"] = self.series_df["search_found"] | self.series_df[
                 col].str.lower().str.contains(
                 search_term.lower())
-            logger.debug(self.series_df["search_found"].describe())
+            self.logger.debug(self.series_df["search_found"].describe())
         self.series_df = self.series_df[self.series_df["search_found"]]
         self.series_df = self.series_df.drop(['search_found'], axis=1)
         if self.series_df.shape[0] == 0:
-            logger.error(f"Input search terms '{search_terms}' do not exist. See column 'KEYFAMILYREF.KEYFAMILYID' in '{self.outdir}series_imf.csv' for valid values.")
+            self.logger.error(f"Input search terms '{search_terms}' do not exist. See column 'KEYFAMILYREF.KEYFAMILYID' in '{self.outdir}series_imf.csv' for valid values.")
             return None
         if is_output:
             # output the data to a CSV file
             self.output_series(series=self.series)
 
-        logger.debug(self.series_df.head())
+        self.logger.debug(self.series_df.head())
         return self.series_df
 
     def get_dimensions(self):
@@ -411,7 +416,7 @@ class IMF(Series):
             for n, dimension in enumerate(self.dimension_list):
                 self.des_list.extend([n + 1])
                 self.id_list.extend([dimension['@codelist']])
-                logger.debug(f"Dimension {n + 1}: {dimension['@codelist']}")
+                self.logger.debug(f"Dimension {n + 1}: {dimension['@codelist']}")
             self.dim_meta_df = pd.DataFrame(list(zip(self.des_list, self.id_list)), columns=['Dimension', 'ID'])
             self.dim_meta_df = self.dim_meta_df.sort_values("Dimension")
 
@@ -458,7 +463,7 @@ class IMF(Series):
                                 ind = metadata[i]['ReportedAttribute'][1]['@conceptID']
                                 if ind == indicator:
                                     output = metadata[i]['ReportedAttribute'][1]['ReportedAttribute']
-                                    logger.debug(output[0]['Value']['#text'], ": ", output[2]['Value']['#text'])
+                                    self.logger.debug(output[0]['Value']['#text'], ": ", output[2]['Value']['#text'])
                                     des_list.extend([output[0]['Value']['#text']])
                                     value_list.extend([output[2]['Value']['#text']])
 
@@ -472,10 +477,10 @@ class IMF(Series):
                             code_df = _extract_metadata(metadata=_metadata, indicator='FREQ')
                             code_df = self.clean_column_names(code_df)
                             self.dim_dict[dim_name] = code_df
-                            logger.debug(f"Dimension {dim_name} details: \n{code_df}")
+                            self.logger.debug(f"Dimension {dim_name} details: \n{code_df}")
                             self.output_dim(dim_name)
                         else:
-                            logger.warning(f"Failed to download dimension, CL_FREQ.")
+                            self.logger.warning(f"Failed to download dimension, CL_FREQ.")
                             self.read_dim_df(dim_name=dim_name)
                     else:
                         json = self.repeat_request(url=f'{self.url}{key}')
@@ -484,16 +489,16 @@ class IMF(Series):
                             code_df = pd.json_normalize(code_list)
                             code_df = self.clean_column_names(code_df)
                             self.dim_dict[dim_name] = code_df
-                            logger.debug(f"Dimension {dim_name} details: \n{code_df}")
+                            self.logger.debug(f"Dimension {dim_name} details: \n{code_df}")
                             self.output_dim(dim_name)
                         else:
-                            logger.warning(f"Failed to download dimension {dim_name}.")
+                            self.logger.warning(f"Failed to download dimension {dim_name}.")
                             self.read_dim_df(dim_name=dim_name)
 
                 except:
                     pass
         else:
-            logger.warning(f"Failed to download dimensions.")
+            self.logger.warning(f"Failed to download dimensions.")
 
     def download_meta(self):
         """
@@ -509,11 +514,11 @@ class IMF(Series):
             for n, dimension in enumerate(self.dimension_list):
                 self.des_list.extend([n + 1])
                 self.id_list.extend([dimension['@codelist']])
-                # logger.debug(f"Dimension {n + 1}: {dimension['@codelist']}")
+                # self.logger.debug(f"Dimension {n + 1}: {dimension['@codelist']}")
             dim_meta_df = pd.DataFrame(list(zip(self.des_list, self.id_list)), columns=['Dimension', 'ID'])
             dim_meta_df = dim_meta_df.sort_values("Dimension")
             dim_meta_df = self.clean_column_names(dim_meta_df)
-            logger.debug(dim_meta_df.head())
+            self.logger.debug(dim_meta_df.head())
 
             # download  meta data
             key = f"CodeList/{self.dimension_list[2]['@codelist']}"
@@ -537,27 +542,27 @@ class IMF(Series):
                 self.meta_df["search_found"] = False
                 string_columns = self.meta_df.select_dtypes(include=object).columns
                 for col, search_term in itertools.product(string_columns, self.search_terms):
-                    logger.debug(f"{col = }, {search_term = }")
+                    self.logger.debug(f"{col = }, {search_term = }")
                     self.meta_df["search_found"] = self.meta_df["search_found"] | \
                                                    self.meta_df[col].str.lower().str.contains(search_term.lower())
-                    logger.debug(self.meta_df["search_found"].describe())
-                    logger.debug(self.meta_df[self.meta_df["search_found"]])
+                    self.logger.debug(self.meta_df["search_found"].describe())
+                    self.logger.debug(self.meta_df[self.meta_df["search_found"]])
                 self.meta_df = self.meta_df[self.meta_df["search_found"]]
                 self.meta_df = self.meta_df.drop(['search_found'], axis=1)
 
             else:
-                logger.warning(f"Failed to download meta data.")
+                self.logger.warning(f"Failed to download meta data.")
                 self.read_meta_df()
 
         if self.meta_df.shape[0] == 0:
-            logger.error(f"User input search terms {self.search_terms} not found in {self.series}. Please see columns 'VALUE' or 'DESCRIPTION.TEXT' in {self.outdir}meta_{self.series}.csv for valid values.")
+            self.logger.error(f"User input search terms {self.search_terms} not found in {self.series}. Please see columns 'VALUE' or 'DESCRIPTION.TEXT' in {self.outdir}meta_{self.series}.csv for valid values.")
             return None
 
         if "ID" not in self.meta_df.columns:
             self.meta_df.columns = ["ID", *list(self.meta_df.columns)[1:]]
         if "Description" not in self.meta_df.columns:
             self.meta_df.columns = [*list(self.meta_df.columns)[:-1], "Description"]
-        logger.debug(f"{self.meta_df.shape = }")
+        self.logger.debug(f"{self.meta_df.shape = }")
         self.meta_df = self.clean_column_names(self.meta_df)
 
         # deduplicate
@@ -580,7 +585,7 @@ class IMF(Series):
             }
         )
         self.meta_df = self.clean_column_names(self.meta_df)
-        logger.info(f"Read meta information from historical data {infile}")
+        self.logger.info(f"Read meta information from historical data {infile}")
 
 
     def read_dim_df(self, dim_name="CL_FREQ"):
@@ -592,7 +597,7 @@ class IMF(Series):
         infile = f"{self.outdir}dim_{dim_name.lower()}.csv"
         if path.exists(infile):
             self.dim_dict[dim_name] = pd.read_csv(infile)
-            logger.info(f"Read dimension information from historical data {infile}")
+            self.logger.info(f"Read dimension information from historical data {infile}")
         else:
             self.dim_dict[dim_name] = None
 
@@ -635,10 +640,10 @@ class IMF(Series):
             dcn_sa_list = [dcn_sa[x:x + self._max_indicators] for x in range(0, len(dcn_sa), self._max_indicators)]
 
         for cont, indicators in itertools.product(self.countries,  dcn_sa_list):
-            logger.debug("Current country", cont)
+            self.logger.debug("Current country", cont)
             url = f"{base}{self.period}.{cont}.{'+'.join(indicators)}{time}"
             # url = f"{base}{period}..{'+'.join(indicators)}.{time}"
-            logger.debug(f"{url = }")
+            self.logger.debug(f"{url = }")
             json = self.repeat_request(url)
             if json is not None:
                 try:
@@ -701,7 +706,7 @@ class IMF(Series):
 
                                 temp = pd.concat([temp, temp_df], axis=0)
                 except:
-                    logger.warning(f"Request for IMF data failed for area code, {cont}: {url = }.")
+                    self.logger.warning(f"Request for IMF data failed for area code, {cont}: {url = }.")
                     pass
 
         is_output = True
@@ -710,12 +715,12 @@ class IMF(Series):
             outfile_path = f"{self.outdir}{csv_filename}"
             if path.exists(outfile_path):
                 temp = pd.read_csv(outfile_path)
-                logger.warning(f"Read data from historical file {outfile_path}")
+                self.logger.warning(f"Read data from historical file {outfile_path}")
                 if "Description" in temp.columns:
                     temp = temp.drop(['Description'], axis=1)
                 is_output = False
             else:
-                logger.warning(f"No data has been downloaded.")
+                self.logger.warning(f"No data has been downloaded.")
                 return pd.DataFrame()
 
         self.data_df = pd.concat([temp, self.data_df], axis=0)
@@ -726,7 +731,7 @@ class IMF(Series):
 
         # sorting
         self.data_df.sort_values(by=["ID", "Country", 'Period'], axis=0, inplace=True)
-        logger.debug(f"data_df.shape = {self.data_df.shape}")
+        self.logger.debug(f"data_df.shape = {self.data_df.shape}")
 
         # remove special characters in column names
         self.data_df = self.clean_column_names(self.data_df)
@@ -747,7 +752,7 @@ class IMF(Series):
             valid_periods = self.dim_dict[freq_key]["VALUE"].values
             valid_periods_str = ", ".join(valid_periods)
             if not (self.period in valid_periods):
-                logger.warning(f"Input period '{self.period}' is not valid (See CL_AREA_{self.series} output table). Changing it to '{valid_periods[0]}'.")
+                self.logger.warning(f"Input period '{self.period}' is not valid (See CL_AREA_{self.series} output table). Changing it to '{valid_periods[0]}'.")
                 self.period = valid_periods[0]
 
         # validate start date and end date
@@ -757,7 +762,7 @@ class IMF(Series):
             logs a warning and returns None.
             Args:
               date: The date of the data you want to get.
-              date_des: description of the date, used for logger.
+              date_des: description of the date, used for self.logger.
             Returns:
               A valid date
             """
@@ -765,7 +770,7 @@ class IMF(Series):
                 if date is not None:
                     datetime.strptime(date, "%Y")
             except ValueError:
-                logger.warning(f"Incorrect data format in input {date_des}, should be 'YYYY'. Setting it to 'None'.")
+                self.logger.warning(f"Incorrect data format in input {date_des}, should be 'YYYY'. Setting it to 'None'.")
                 date = None
             return date
 
@@ -782,12 +787,12 @@ class IMF(Series):
                 rm_countries = []
                 for c in self.countries:
                     if not (c in valid_countries):
-                        logger.warning(f"Input country '{c}' is not valid (see CL_AREA_{self.series}'s output table). Dropping it from input.")
+                        self.logger.warning(f"Input country '{c}' is not valid (see CL_AREA_{self.series}'s output table). Dropping it from input.")
                         rm_countries.extend([c])
                 for c in rm_countries:
                     self.countries.remove(c)
                 if len(self.countries) == 0:
-                    logger.warning(f"Input countries contains no valid entries. Setting it to [{valid_countries[0]}]")
+                    self.logger.warning(f"Input countries contains no valid entries. Setting it to [{valid_countries[0]}]")
                     self.countries = [valid_countries[0]]
 
         # validate serarch terms
@@ -832,7 +837,7 @@ class IMF(Series):
 
         if not (isinstance(json, dict) and (len(json) >= 1)):
             # check that the JSON object is a dictionary, and that it has more than one key, otherwise gives a warning
-            logger.warning(f"No response received from IMF data server for {url = } after {self._max_requests} trials.")
+            self.logger.warning(f"No response received from IMF data server for {url = } after {self._max_requests} trials.")
             json = None
 
         return json
@@ -975,6 +980,6 @@ if __name__ == '__main__':
     # ORIGINAL CODE ENDS HERE
 
     imf = IMF(search_terms=["Gross Domestic Product, Real"], countries=["US", "DE"],
-              period='Q', start_date="2000", end_date="2022", outdir='my_output_directory', logdir='my_log_directory')
+              period='Q', start_date="2000", end_date="2022", outdir='../../my_output_directory', logdir='../../my_log_directory')
     df = imf.download_data()
     df_summary = imf.describe_data()

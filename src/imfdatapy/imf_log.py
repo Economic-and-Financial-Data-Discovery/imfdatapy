@@ -2,39 +2,51 @@ import logging.config
 from datetime import datetime
 import os
 
-time_stamp = str(datetime.now())[:19].replace(" ", "-").replace(":", "-")
-cwd = os.getcwd()
-is_file_logger = True
-if (cwd[-3:] == "src") or (cwd[-4:] == "demo") or (cwd[-5:] == "tests"):
-    logdir = "../log"
-elif cwd[-9:] == "imfdatapy":
-    logdir = "../../log"
-else:
-    print("WARN: Just creating a logger with output to screen.")
-    is_file_logger = False
+class LogFile:
+    def __init__(self, logdir=None, is_log_to_file=True):
 
-if is_file_logger:
-    if not os.path.exists(logdir):
-        print(f"WARN: Creating log directory {logdir}")
-        os.mkdir(logdir)
-    log_file = f"{logdir}/imfdatapy_{time_stamp}.log"
+        self.is_log_to_file = is_log_to_file
 
-log_format = "%(asctime)s %(filename)s:%(lineno)d - %(levelname)s - %(message)s"
+        cwd = os.getcwd()
+        time_stamp = str(datetime.now())[:19].replace(" ", "-").replace(":", "-")
 
-rootLogger = logging.getLogger()
+        if not is_log_to_file:
+            print("WARN: Just creating a logger with output to screen.")
+        else:
+            if logdir is None:
+                if (cwd[-3:] == "src") or (cwd[-4:] == "demo") or (cwd[-5:] == "tests"):
+                    self.logdir = "../log"
+                elif cwd[-9:] == "imfdatapy":
+                    self.logdir = "../../log"
+            else:
+                logdir = f"{logdir}{os.sep}" if logdir[-1] != os.sep else logdir
+                self.logdir = logdir
 
-if is_file_logger:
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setFormatter(logging.Formatter(log_format))
+            if not os.path.exists(self.logdir):
+                print(f"WARN: Creating log directory {self.logdir}")
+                os.mkdir(self.logdir)
+            self.log_file = f"{self.logdir}/imfdatapy_{time_stamp}.log"
 
-consoleHandler = logging.StreamHandler()
-consoleHandler.setFormatter(logging.Formatter(log_format))
-rootLogger.addHandler(consoleHandler)
 
-logger = logging.getLogger("imfdatapy_log")
-logger.setLevel(logging.INFO)
+        self.log_format = "%(asctime)s %(filename)s:%(lineno)d - %(levelname)s - %(message)s"
 
-if is_file_logger:
-    logger.addHandler(file_handler)
-    logger.info(f"Current directory {os.getcwd()}")
-    logger.info(f"Started log {log_file}")
+    def start_log(self):
+        rootLogger = logging.getLogger()
+
+        if self.is_log_to_file:
+            file_handler = logging.FileHandler(self.log_file)
+            file_handler.setFormatter(logging.Formatter(self.log_format))
+
+        consoleHandler = logging.StreamHandler()
+        consoleHandler.setFormatter(logging.Formatter(self.log_format))
+        rootLogger.addHandler(consoleHandler)
+
+        logger = logging.getLogger("imfdatapy_log")
+        logger.setLevel(logging.INFO)
+
+        if self.is_log_to_file:
+            logger.addHandler(file_handler)
+            logger.info(f"Current directory {os.getcwd()}")
+            logger.info(f"Started log {self.log_file}")
+
+        return logger
