@@ -2,7 +2,6 @@
 Authors: Sou-Cheng T. Choi and Irina Klein, Illinois Institute of Technology
 Updated Date: Dec 7, 2022
 Creation Date: Jun 15, 2022
-
 """
 
 import os
@@ -16,10 +15,6 @@ import itertools
 import pandas as pd
 import requests
 
-import cProfile
-import pstats
-
-
 MAX_FILENAME_LEN = 260
 
 try:
@@ -30,6 +25,101 @@ except:
     except:
         print(f"WARN: Failed to create log file.")
 
+# THIS IS THE EDITED CODE
+
+class Series(ABC):
+
+    def __init__(self, series='IFS', search_terms=None, countries=None, period='Q', start_date=None, end_date=None, outdir=None, logdir=None):
+
+        input_str = ""
+        if series is not None:
+            input_str += f"{series = }"
+        if search_terms is not None:
+            input_str += f", {search_terms = }"
+        if countries is not None:
+            input_str += f", {countries = }"
+        if start_date is not None:
+            input_str += f", {start_date = }"
+        if end_date is not None:
+            input_str += f", {end_date = }"
+        if outdir is not None:
+            input_str += f", {outdir = }"
+        if logdir is not None:
+            input_str += f", {logdir = }"
+        logger.info(f"Inputs: {input_str}")
+
+        self.series = series
+        self.search_terms = search_terms
+        self.countries = countries
+        self.start_date = start_date
+        self.end_date = end_date
+        self.period = period
+        self.start_time = start_date[:4] if isinstance(start_date, str) else start_date
+        self.end_time = end_date[:4] if isinstance(end_date, str) else end_date
+        self.url = 'http://dataservices.imf.org/REST/SDMX_JSON.svc/'
+        self.meta_df = pd.DataFrame()
+        self.series_df = pd.DataFrame()
+        self.data_df = pd.DataFrame()
+        self.dim_dict = {}
+        self.des_list = []
+        self.id_list = []
+
+        # Control for rate limits, `https://datahelp.imf.org/knowledgebase/articles/630877-data-services`
+        self._max_requests = 3
+        self._sleep_sec = 1  # 10 requests in 5s per user (IP) & 50 requests per second per app
+        self._max_indicators = 5
+
+        # Output and log directories
+        self.outdir = outdir if outdir is not None else f"..{os.sep}out{os.sep}"
+        if not os.path.exists(self.outdir):
+            os.mkdir(self.outdir)
+
+        self.logdir = logdir if logdir is not None else f"..{os.sep}log{os.sep}"
+        if not os.path.exists(self.logdir):
+            os.mkdir(self.logdir)
+        logging.basicConfig(filename=f"{self.logdir}imf.log", level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+        # # Set default output and log directories
+        # self.outdir = outdir if outdir is not None else '..\\out\\'
+        # self.logdir = logdir if logdir is not None else '..\\logs\\'
+        #
+        # # Create output and log directories if they do not exist
+        # if not path.exists(self.outdir):
+        #     mkdir(self.outdir)
+        # if not path.exists(self.logdir):
+        #     mkdir(self.logdir)
+
+        def get_series_names(self):
+            pass
+
+        @abstractmethod
+        def download_meta(self):
+            pass
+
+        @abstractmethod
+        def download_data(self):
+            pass
+
+        @abstractmethod
+        def get_meta(self):
+            pass
+
+        @abstractmethod
+        def get_data(self):
+            pass
+
+        @abstractmethod
+        def describe_meta(self):
+            pass
+
+        @abstractmethod
+        def describe_data(self):
+            pass
+
+
+'''
+THIS IS THE ORIGINAL CODE
+
 # abstract class
 class Series(ABC):
 
@@ -37,7 +127,6 @@ class Series(ABC):
                  outdir=None):
         """
         This function initializes the IMF class, which is used to download data from the IMF's Data API.
-
         Args:
           series: the name of the series to download. Defaults to 'IFS'.
           search_terms: list of strings to find in indicator names in the series.
@@ -80,7 +169,7 @@ class Series(ABC):
 
         # Control for rate limits, `https://datahelp.imf.org/knowledgebase/articles/630877-data-services`
         self._max_requests = 3
-        self._sleep_sec = 2
+        self._sleep_sec = 1  # 10 requests in 5s per user (IP) & 50 requests per second per app
         self._max_indicators = 5
 
         # Doesn't create new directory in colab
@@ -115,19 +204,19 @@ class Series(ABC):
     def describe_data(self):
         pass
 
+ORIGINAL CODE ENDS HERE
+'''
 
 # concrete class
 class IMF(Series):
 
     def __init__(self, series='IFS', search_terms=None, countries=None, period='Q',
-                 start_date=None, end_date=None, outdir=None):
-        super().__init__(series, search_terms, countries, period, start_date, end_date, outdir)
+                 start_date=None, end_date=None, outdir=None, logdir=None):
+        super().__init__(series, search_terms, countries, period, start_date, end_date, outdir, logdir)
 
     def output_series(self, series=None):
         """
         This function outputs all or some IMF series dataframe to a csv file, and logs its file path.
-
-
         Args:
           series: Series code as a string. If `series` is `None`, then the function outputs all series to a csv file. If `series` is not `None`, then the function outputs only the series that contain the string `series` to a csv file.
         """
@@ -149,7 +238,6 @@ class IMF(Series):
     def output_dim(self, dim_name=None):
         """
         This function outputs all or some dimension tables to a .csv file in 'out'
-
         Args:
           dim_name: Dimension name as a string
         """
@@ -174,7 +262,6 @@ class IMF(Series):
     def output_meta(self, indicator=None):
         """
         Method to output all or some indicators in a tables to a .csv file in 'out'
-
         Args:
           indicator: Indicator code as a string
         """
@@ -197,16 +284,19 @@ class IMF(Series):
     def output_data(self, is_gen_filename=False):
         """
         This function outputs the data to a csv file.
-
         Args:
           is_gen_filename: generate the csv file name from user inputs if `True`, defaults to `False`
         """
         # output to csv file
+        # is_gen_filename == FALSE
         if not is_gen_filename:
             outfile_path = f"{self.outdir}data_{self.series.lower()}.csv"
         else:
             csvfilename, st_str = self.gen_data_filename()
             outfile_path = f"{self.outdir}{csvfilename}"
+
+        print("outfile value : ", outfile_path)
+        print("self.outdir value : ", self.outdir)
 
         if (self.data_df.shape[0] > 0) and (self.data_df.shape[1] > 0):
             self.data_df.to_csv(outfile_path, index=False)
@@ -221,11 +311,9 @@ class IMF(Series):
         """
         It takes the search terms, countries, period, start time, and end time, and creates a filename for
         the data up to 250 characters
-
         Args:
           is_meta: whether to generate a filename for the meta data or the actual data, defaults to False
         (optional). Defaults to False
-
         Returns:
           The filename and the search terms
         """
@@ -260,7 +348,6 @@ class IMF(Series):
         """
         It takes a list of series names, and returns a dataframe with the series names and their
         corresponding IDs
-
         Returns:
           A dataframe with the series names and their corresponding IDs.
         """
@@ -340,10 +427,8 @@ class IMF(Series):
                             `'IFS'`. The function then uses the `repeat_request` function to make a request to the
                             `GenericMetadata` endpoint of the API, and if the request is successful, it returns the
                             `AttributeValueSet` of the `MetadataSet` of the `GenericMetadata` of the response
-
                             Args:
                               series: The data series you want to download. Defaults to `IFS`
-
                             Returns:
                               A list of dictionaries containing metadata.
                             """
@@ -359,11 +444,9 @@ class IMF(Series):
                             """
                             Given an economic indicator name, the function takes in a list of dictionaries, and returns a dataframe with two columns, one for
                             the valid values and one for the value description of the indicator.
-
                             Args:
                               metadata: the metadata dictinoary from the API call
                               indicator: The indicator we want to get data for. Defaults to 'FREQ'.
-
                             Returns:
                               A dataframe with the value and description of the frequency of the data.
                             """
@@ -415,7 +498,6 @@ class IMF(Series):
     def download_meta(self):
         """
         The function downloads the meta data of the time series from the IMF API
-
         Returns:
           The meta data of the time series.
         """
@@ -488,7 +570,6 @@ class IMF(Series):
     def read_meta_df(self):
         """
         The function reads a csv file into a Pandas dataframe, renames the columns, and then cleans the column names.
-
         """
         infile = f"{self.outdir}meta_{self.series.lower()}.csv"
         self.meta_df = pd.read_csv(infile)
@@ -505,7 +586,6 @@ class IMF(Series):
     def read_dim_df(self, dim_name="CL_FREQ"):
         """
         The function reads a csv file with dimension data into a Pandas dataframe.
-
         Args:
             dim_name: name of dimension
         """
@@ -521,7 +601,6 @@ class IMF(Series):
     def download_data(self):
         """
         It downloads data and its meta data from the IMF web server, and saves it to a csv file.
-
         Returns:
           The data is being returned as a pandas dataframe.
         """
@@ -676,11 +755,9 @@ class IMF(Series):
             """
             It takes in a date and a description of the date, and if the date is not in the correct format, it
             logs a warning and returns None.
-
             Args:
               date: The date of the data you want to get.
               date_des: description of the date, used for logger.
-
             Returns:
               A valid date
             """
@@ -719,10 +796,8 @@ class IMF(Series):
     def clean_column_names(self, df):
         """
         It replaces special characters in all column names and makes them upper case
-
         Args:
           df: The Pandas dataframe to be cleaned
-
         Returns:
           The Pandas dataframe with the cleaned column names.
         """
@@ -737,10 +812,8 @@ class IMF(Series):
         """
         It will try to get a response from the IMF data server for a given url, and if it doesn't get a
         response, it will wait a few seconds and try again
-
         Args:
           url: the url to request
-
         Returns:
           The json object is being returned. It will returns `None` if it does not get a valid response after making a few requests to the IMF data server.
         """
@@ -768,7 +841,6 @@ class IMF(Series):
     def get_meta(self):
         """
         This function returns the meta data of the IMF economic indicator(s).
-
         Returns:
           The meta data of the time series data
         """
@@ -778,7 +850,6 @@ class IMF(Series):
     def get_data(self):
         """
         This function returns the time series data.
-
         Returns:
           The dataframe of the time series data.
         """
@@ -788,7 +859,6 @@ class IMF(Series):
     def describe_data(self):
         """
         The function returns a summary of data.
-
         Returns:
           A Pandas dataframe that contains the summary statistics of the data.
         """
@@ -799,7 +869,6 @@ class IMF(Series):
     def describe_meta(self):
         """
         This function takes the meta data dataframe and returns a summary of the meta data.
-
         Returns:
             Summary of meta data
         """
@@ -831,7 +900,6 @@ class IFS(IMF):
 
 class DOT(IMF):
     """ Direction of Trade Statistics (DOT). A child class of IMF.
-
     """
 
     def __init__(self, series='DOT', search_terms=None, countries=None, period='Q',
@@ -854,7 +922,6 @@ class BOP(IMF):
 class FSI(IMF):
     """
     Financial Soundness Indicators (FSIs). A child class of IMF.
-
     """
 
     def __init__(self, series='FSI', search_terms=None, countries=None, period='M',
@@ -900,15 +967,14 @@ class HPDD(IMF):
 
 #
 if __name__ == '__main__':
-    with cProfile.Profile() as profile:
-        ifs = IFS(search_terms=["Gross Domestic Product, Real"], countries=["US", "DE"],
-                  period='Q', start_date="2000", end_date="2022", outdir=f"..{os.sep}..{os.sep}out{os.sep}")
-        df = ifs.download_data()
-        df_summary = ifs.describe_data()
-    results = pstats.Stats(profile)
-    # Sorting by Total_Time
-    # results.sort_stats(pstats.SortKey.TIME)
-    # Sorting by Cumulative_Time
-    results.sort_stats(pstats.SortKey.CUMULATIVE)
-    results.print_stats()
-#    results.dump_stats("results.prof")
+    # THIS IS THE ORIGINAL CODE
+    # ifs = IFS(search_terms=["Gross Domestic Product, Real"], countries=["US", "DE"],
+    #           period='Q', start_date="2000", end_date="2022", outdir=f"..{os.sep}..{os.sep}out{os.sep}")
+    # df = ifs.download_data()
+    # df_summary = ifs.describe_data()
+    # ORIGINAL CODE ENDS HERE
+
+    imf = IMF(search_terms=["Gross Domestic Product, Real"], countries=["US", "DE"],
+              period='Q', start_date="2000", end_date="2022", outdir='my_output_directory', logdir='my_log_directory')
+    df = imf.download_data()
+    df_summary = imf.describe_data()
