@@ -3,7 +3,7 @@ from datetime import datetime
 import os
 
 class LogFile:
-    def __init__(self, logdir=None, is_log_to_file=True):
+    def __init__(self, logdir="log", is_log_to_file=True):
 
         self.is_log_to_file = is_log_to_file
 
@@ -13,19 +13,13 @@ class LogFile:
         if not is_log_to_file:
             print("WARN: Just creating a logger with output to screen.")
         else:
-            if logdir is None:
-                if (cwd[-3:] == "src") or (cwd[-4:] == "demo") or (cwd[-5:] == "tests"):
-                    self.logdir = "../log"
-                elif cwd[-9:] == "imfdatapy":
-                    self.logdir = "../../log"
-            else:
-                logdir = f"{logdir}{os.sep}" if logdir[-1] != os.sep else logdir
-                self.logdir = logdir
+            logdir = f"{logdir}{os.sep}" if logdir[-1] != os.sep else logdir
+            self.logdir = logdir
 
             if not os.path.exists(self.logdir):
                 print(f"WARN: Creating log directory {self.logdir}")
                 os.mkdir(self.logdir)
-            self.log_file = f"{self.logdir}/imfdatapy_{time_stamp}.log"
+            self.log_file = f"{self.logdir}imfdatapy_{time_stamp}.log"
 
 
         self.log_format = "%(asctime)s %(filename)s:%(lineno)d - %(levelname)s - %(message)s"

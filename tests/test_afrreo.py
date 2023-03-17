@@ -1,8 +1,11 @@
+
 import unittest
 from imfdatapy.imf import *
 
-class MyTestCase(unittest.TestCase):
+class TestAfrreo(unittest.TestCase):
 
+    def setUp(self):
+        os.chdir("..")
 
     def test_imf_afrreo_eg1(self):
         affreo = AFRREO(search_terms=["total expenditure"], countries=["CF"], period='A', start_date=None, end_date=None)

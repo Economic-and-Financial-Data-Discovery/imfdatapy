@@ -29,7 +29,7 @@ except:
 
 class Series(ABC):
 
-    def __init__(self, series='IFS', search_terms=None, countries=None, period='Q', start_date=None, end_date=None, outdir=None, logdir=None, is_log_to_file=True):
+    def __init__(self, series='IFS', search_terms=None, countries=None, period='Q', start_date=None, end_date=None, outdir="out", logdir="log", is_log_to_file=True):
 
         input_str = ""
         if series is not None:
@@ -49,10 +49,7 @@ class Series(ABC):
         if is_log_to_file is not None:
             input_str += f", {is_log_to_file = }"
 
-
-        self.logdir = logdir
-        self.is_log_to_file = is_log_to_file
-        logfile = LogFile(logdir=self.logdir, is_log_to_file=self.is_log_to_file)
+        logfile = LogFile(logdir=logdir, is_log_to_file=is_log_to_file)
         self.logger = logfile.start_log()
         self.logger.info(f"Inputs: {input_str}")
 
@@ -216,7 +213,7 @@ ORIGINAL CODE ENDS HERE
 class IMF(Series):
 
     def __init__(self, series='IFS', search_terms=None, countries=None, period='Q',
-                 start_date=None, end_date=None, outdir=None, logdir=None):
+                 start_date=None, end_date=None, outdir="out", logdir="log"):
         super().__init__(series, search_terms, countries, period, start_date, end_date, outdir, logdir)
 
     def output_series(self, series=None):
@@ -978,8 +975,8 @@ if __name__ == '__main__':
     # df = ifs.download_data()
     # df_summary = ifs.describe_data()
     # ORIGINAL CODE ENDS HERE
-
+    os.chdir("../../")
     imf = IMF(search_terms=["Gross Domestic Product, Real"], countries=["US", "DE"],
-              period='Q', start_date="2000", end_date="2022", outdir='../../my_output_directory', logdir='../../my_log_directory')
+              period='Q', start_date="2000", end_date="2022", outdir='my_output_directory', logdir='my_log_directory')
     df = imf.download_data()
     df_summary = imf.describe_data()
