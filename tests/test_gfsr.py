@@ -1,7 +1,7 @@
 import unittest
 from imfdatapy.imf import *
 
-class MyTestCase(unittest.TestCase):
+class TestGFSR(unittest.TestCase):
 
     def test_imf_gfsr_eg1(self):
         gfsr = GFSR(search_terms=["central government"], countries=["US"], period='A', start_date="2000", end_date="2022")

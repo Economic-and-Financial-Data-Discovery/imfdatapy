@@ -2,7 +2,7 @@
 import unittest
 from imfdatapy.imf import *
 
-class MyTestCase(unittest.TestCase):
+class TestIFS(unittest.TestCase):
 
     def test_imf_oo(self):
         ifs = IFS()
@@ -17,7 +17,6 @@ class MyTestCase(unittest.TestCase):
         meta_df = ifs.get_meta()
         self.assertGreaterEqual(meta_df.shape[0], 3)
         self.assertGreaterEqual(meta_df.shape[1], 3)
-
 
     def test_imf_ifs_eg2(self):
         ifs = IFS(search_terms=["gross Domestic Product, Real"], countries=["CA", "RU"],

@@ -1,7 +1,7 @@
 import unittest
 from imfdatapy.imf import *
 
-class MyTestCase(unittest.TestCase):
+class TestFSI(unittest.TestCase):
 
     def test_imf_fsi_eg1(self):
         fsi = FSI(search_terms=["Value of large exposures"], countries=["US"], period='Q', start_date="2000",

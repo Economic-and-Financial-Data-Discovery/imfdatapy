@@ -1,7 +1,7 @@
 import unittest
 from imfdatapy.imf import *
 
-class MyTestCase(unittest.TestCase):
+class TestBOP(unittest.TestCase):
 
 
     def test_imf_bop_eg1(self):

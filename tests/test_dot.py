@@ -1,7 +1,7 @@
 import unittest
 from imfdatapy.imf import *
 
-class MyTestCase(unittest.TestCase):
+class TestDOT(unittest.TestCase):
 
     def test_imf_dot_eg1(self):
         dot = DOT(search_terms=["trade"], countries=["US"], period='Q', start_date="2000", end_date="2022")

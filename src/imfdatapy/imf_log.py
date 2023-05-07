@@ -2,39 +2,46 @@ import logging.config
 from datetime import datetime
 import os
 
-time_stamp = str(datetime.now())[:19].replace(" ", "-").replace(":", "-")
-cwd = os.getcwd()
-is_file_logger = True
-if (cwd[-3:] == "src") or (cwd[-4:] == "demo") or (cwd[-5:] == "tests"):
-    logdir = "../log"
-elif cwd[-9:] == "imfdatapy":
-    logdir = "../../log"
-else:
-    print("WARN: Just creating a logger with output to screen.")
-    is_file_logger = False
 
-if is_file_logger:
-    if not os.path.exists(logdir):
-        print(f"WARN: Creating log directory {logdir}")
-        os.mkdir(logdir)
-    log_file = f"{logdir}/imfdatapy_{time_stamp}.log"
+class LogFile:
+    def __init__(self, logdir="log", is_log_to_screen=True):
 
-log_format = "%(asctime)s %(filename)s:%(lineno)d - %(levelname)s - %(message)s"
+        self.is_log_to_screen = is_log_to_screen
 
-rootLogger = logging.getLogger()
+        time_stamp = str(datetime.now())[:19].replace(" ", "-").replace(":", "-")
 
-if is_file_logger:
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setFormatter(logging.Formatter(log_format))
+        logdir = f"{logdir}{os.sep}" if logdir[-1] != os.sep else logdir
+        self.logdir = logdir
 
-consoleHandler = logging.StreamHandler()
-consoleHandler.setFormatter(logging.Formatter(log_format))
-rootLogger.addHandler(consoleHandler)
+        if not os.path.exists(self.logdir):
+            os.mkdir(self.logdir)
 
-logger = logging.getLogger("imfdatapy_log")
-logger.setLevel(logging.INFO)
+        self.log_file = f"{self.logdir}imfdatapy_{time_stamp}.log"
 
-if is_file_logger:
-    logger.addHandler(file_handler)
-    logger.info(f"Current directory {os.getcwd()}")
-    logger.info(f"Started log {log_file}")
+        self.log_format = "%(asctime)s %(filename)s:%(lineno)d - %(levelname)s - %(message)s"
+
+    def start_log(self):
+        rootLogger = logging.getLogger()
+
+        file_handler = logging.FileHandler(self.log_file)
+        file_handler.setFormatter(logging.Formatter(self.log_format))
+
+        if self.is_log_to_screen:
+            consoleHandler = logging.StreamHandler()
+            consoleHandler.setFormatter(logging.Formatter(self.log_format))
+            rootLogger.addHandler(consoleHandler)
+        else:
+            # Remove consoleHandler if it exists
+            for handler in rootLogger.handlers:
+                if isinstance(handler, logging.StreamHandler):
+                    rootLogger.removeHandler(handler)
+
+        logger = logging.getLogger("imfdatapy_log")
+        logger.setLevel(logging.INFO)
+
+        logger.addHandler(file_handler)
+
+        logger.info(f"Current directory {os.getcwd()}")
+        logger.info(f"Started log file in .{os.sep}{self.log_file}")
+
+        return logger

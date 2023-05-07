@@ -1,7 +1,7 @@
 import unittest
 from imfdatapy.imf import *
 
-class MyTestCase(unittest.TestCase):
+class TestHPDD(unittest.TestCase):
 
     def test_imf_hpdd_eg1(self):
         hpdd = HPDD(search_terms=["GDP"], countries=["US"], period='A', start_date=None,
