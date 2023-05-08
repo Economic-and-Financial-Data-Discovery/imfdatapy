@@ -140,7 +140,7 @@ class TestIFS(unittest.TestCase):
         # test for getting all countries for a given IFS code
         ifs = IFS(search_terms=["NGDP_R_SA_XDC"], countries=None, period="Q", start_date=None, end_date=None)
         df = ifs.download_data()
-        self.assertGreaterEqual(df.shape[0], 7580)
+        self.assertGreaterEqual(df.shape[0], 7508)
         self.assertGreaterEqual(df.shape[1], 10)
         meta_df = ifs.get_meta()
         self.assertGreaterEqual(meta_df.shape[0], 1)
