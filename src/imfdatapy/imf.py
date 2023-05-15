@@ -903,7 +903,7 @@ class GFSR(IMF):
     """
 
     def __init__(self, series='GFSR', search_terms=None, countries=None, period='A',
-                 start_date=None, end_date=None, outdir=None, sector="", unit="", logdir="log", is_log_to_screen=True):
+                 start_date=None, end_date=None,  sector="", unit="", outdir="out", logdir="log", is_log_to_screen=True):
         super().__init__(series=series, search_terms=search_terms, countries=countries, period=period,
                          start_date=start_date, end_date=end_date, outdir=outdir, logdir=logdir,
                          is_log_to_screen=is_log_to_screen)
@@ -921,7 +921,7 @@ class GFSR(IMF):
             input_str += f", {sector = }"
 
 
-        logger.info(f"{series} specific inputs: {input_str}")
+        self.logger.info(f"{series} specific inputs: {input_str}")
 
     def download_data(self):
         """
@@ -960,7 +960,7 @@ class GFSR(IMF):
             try:
                 self.sector = df_temp.loc[df_temp['DESCRIPTION.TEXT'] == self.sector, 'VALUE'].iloc[0]
             except:
-                logger.warning(f"The given sector attribute does not match the metadata: {self.sector}. Defaulting to None.")
+                self.logger.warning(f"The given sector attribute does not match the metadata: {self.sector}. Defaulting to None.")
                 self.sector = ""
 
         if self.unit != "":
@@ -968,13 +968,13 @@ class GFSR(IMF):
             try:
                 self.unit = df_temp.loc[df_temp['DESCRIPTION.TEXT'] == self.unit, 'VALUE'].iloc[0]
             except:
-                logger.warning(f"The given unit attribute does not match the metadata: {self.unit}. Defaulting to None.")
+                self.logger.warning(f"The given unit attribute does not match the metadata: {self.unit}. Defaulting to None.")
                 self.unit = ""
 
-        logger.debug(f"sector id lookup (now self.sector) {self.sector}")
-        logger.debug(f"unit id lookup (now self.unit) {self.unit}")
+        self.logger.debug(f"sector id lookup (now self.sector) {self.sector}")
+        self.logger.debug(f"unit id lookup (now self.unit) {self.unit}")
 
-        logger.info(f"dcn_sa is {dcn_sa}")
+        self.logger.info(f"dcn_sa is {dcn_sa}")
 
         temp = pd.DataFrame()
 
@@ -983,15 +983,15 @@ class GFSR(IMF):
         else:
             dcn_sa_list = [dcn_sa[x:x + self._max_indicators] for x in range(0, len(dcn_sa), self._max_indicators)]
 
-        logger.info(f"dcn_sa_list is {dcn_sa_list}")
+        self.logger.info(f"dcn_sa_list is {dcn_sa_list}")
 
         for cont, indicators in itertools.product(self.countries,  dcn_sa_list):
-            logger.debug("Current country", cont)
+            self.logger.debug("Current country", cont)
 
             # url = f"{base}{self.period}.{cont}{'.'*(self._indicator_dim_position-1)}{'+'.join(indicators)}{time}"
             # logger.info(f"URL is {url}")
             url = f"{base}{self.period}.{cont}.{self.sector}.{self.unit}.{'+'.join(indicators)}{time}"
-            logger.debug(f"URL is {url}")
+            self.logger.debug(f"URL is {url}")
             # url = f"{base}{period}..{'+'.join(indicators)}.{time}"
 
             # logger.debug(f"{url_v2 = }")
@@ -1058,7 +1058,7 @@ class GFSR(IMF):
 
                                 temp = pd.concat([temp, temp_df], axis=0)
                 except:
-                    logger.warning(f"Request for IMF data failed for area code, {cont}: {url = }.")
+                    self.logger.warning(f"Request for IMF data failed for area code, {cont}: {url = }.")
                     pass
 
         is_output = True
@@ -1067,12 +1067,12 @@ class GFSR(IMF):
             outfile_path = f"{self.outdir}{csv_filename}"
             if path.exists(outfile_path):
                 temp = pd.read_csv(outfile_path)
-                logger.warning(f"Read data from historical file {outfile_path}")
+                self.logger.warning(f"Read data from historical file {outfile_path}")
                 if "Description" in temp.columns:
                     temp = temp.drop(['Description'], axis=1)
                 is_output = False
             else:
-                logger.warning(f"No data has been downloaded.")
+                self.logger.warning(f"No data has been downloaded.")
                 return pd.DataFrame()
 
         self.data_df = pd.concat([temp, self.data_df], axis=0)
@@ -1083,7 +1083,7 @@ class GFSR(IMF):
 
         # sorting
         self.data_df.sort_values(by=["ID", "Country", 'Period'], axis=0, inplace=True)
-        logger.debug(f"data_df.shape = {self.data_df.shape}")
+        self.logger.debug(f"data_df.shape = {self.data_df.shape}")
 
         # remove special characters in column names
         self.data_df = self.clean_column_names(self.data_df)
@@ -1118,30 +1118,3 @@ class HPDD(IMF):
         super().__init__(series=series, search_terms=search_terms, countries=countries, period=period,
                          start_date=start_date, end_date=end_date, outdir=outdir, logdir=logdir,
                          is_log_to_screen=is_log_to_screen)
-
-
-#
-if __name__ == '__main__':
-    ifs = IFS(search_terms=["Gross Domestic Product, Real"], countries=["US", "DE"],
-
-              period='Q', start_date="2004", end_date="2022", outdir=f"..{os.sep}..{os.sep}out{os.sep}")
-
-    df = ifs.download_data()
-    # df_summary = ifs.describe_data()
-
-    # gfsr = GFSR(search_terms=["social contributions"], countries=["US"], period='A', start_date="2000", end_date="2022")
-    # df = gfsr.download_data()
-    # print(df.shape)
-    # df_summary = gfsr.describe_data()
-    # print(df_summary)
-    # meta_df = gfsr.get_meta()
-    # print(meta_df.shape)
-
-    gfsr = GFSR(search_terms=["social contributions"], countries=["US"], period='A', start_date="2000", end_date="2020",
-                sector="S1311")
-    df = gfsr.download_data()
-    print(df)
-    # df_summary = gfsr.describe_data()
-    # print(df_summary)
-    # meta_df = gfsr.get_meta()
-    # print(meta_df)
