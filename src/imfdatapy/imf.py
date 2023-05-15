@@ -68,6 +68,7 @@ class Series(ABC):
         if is_log_to_screen:
             self.logger.info(f"Inputs: {input_str}")
 
+
         self.series = series
         self.search_terms = search_terms
         self.countries = countries
@@ -83,6 +84,8 @@ class Series(ABC):
         self.dim_dict = {}
         self.des_list = []
         self.id_list = []
+
+        self._indicator_dim_position = 2
 
         # Control for rate limits, `https://datahelp.imf.org/knowledgebase/articles/630877-data-services`
         self._max_requests = 3
@@ -167,8 +170,9 @@ class IMF(Series):
                 outfile_path = f"{self.outdir}dim_{key.lower()}.csv"
                 if (self.dim_dict[key].shape[0] > 0) and (self.dim_dict[key].shape[1] > 0):
                     self.dim_dict[key].to_csv(outfile_path, index=False)
-                    self.logger.info(
-                        f"Output dimension {key} in a {self.dim_dict[key].shape} table to .{os.sep}{outfile_path}")
+                    self.logger.info(f"Output dimension {key} in a {self.dim_dict[key].shape} table to {outfile_path}")
+                    self.logger.debug((f"key, self.dim_dict[key] {key, self.dim_dict[key]}"))
+
                 else:
                     self.logger.warning(f"No dimension {key} data to be output.")
         else:
@@ -347,6 +351,8 @@ class IMF(Series):
                 is_output = True
                 try:
                     dim_name = self.dimension_list[n]['@codelist']
+                    if 'INDICATOR' in dim_name:
+                        self._indicator_dim_position = n
                     key = f"CodeList/{dim_name}"
                     if dim_name[:7] in ["CL_FREQ"]:
                         def _get_metadata(series='IFS'):
@@ -449,7 +455,7 @@ class IMF(Series):
             self.logger.debug(dim_meta_df.head())
 
             # download  meta data
-            key = f"CodeList/{self.dimension_list[2]['@codelist']}"
+            key = f"CodeList/{self.dimension_list[self._indicator_dim_position]['@codelist']}"
             json = self.repeat_request(url=f'{self.url}{key}')
             if json is not None:
                 code_list = json['Structure']['CodeLists']['CodeList']['Code']
@@ -461,7 +467,7 @@ class IMF(Series):
 
         # finds the indicators by the search words
         if self.search_terms is not None:
-            key = f"CodeList/{self.dimension_list[2]['@codelist']}"
+            key = f"CodeList/{self.dimension_list[self._indicator_dim_position]['@codelist']}"
             json = self.repeat_request(url=f'{self.url}{key}')
             if json is not None:
                 code_list = json['Structure']['CodeLists']['CodeList']['Code']
@@ -570,7 +576,9 @@ class IMF(Series):
 
         for cont, indicators in itertools.product(self.countries, dcn_sa_list):
             self.logger.debug("Current country", cont)
-            url = f"{base}{self.period}.{cont}.{'+'.join(indicators)}{time}"
+            url = f"{base}{self.period}.{cont}{'.' * (self._indicator_dim_position - 1)}{'+'.join(indicators)}{time}"
+            # logger.info(f"URL is {url}")
+
             # url = f"{base}{period}..{'+'.join(indicators)}.{time}"
             self.logger.debug(f"{url = }")
             json = self.repeat_request(url)
@@ -895,10 +903,196 @@ class GFSR(IMF):
     """
 
     def __init__(self, series='GFSR', search_terms=None, countries=None, period='A',
-                 start_date=None, end_date=None, outdir="out", logdir="log", is_log_to_screen=True):
+                 start_date=None, end_date=None, outdir=None, sector="", unit="", logdir="log", is_log_to_screen=True):
         super().__init__(series=series, search_terms=search_terms, countries=countries, period=period,
                          start_date=start_date, end_date=end_date, outdir=outdir, logdir=logdir,
                          is_log_to_screen=is_log_to_screen)
+        input_str = ""
+        if unit is None or unit == "":
+            self.unit = ""
+        else:
+            self.unit = unit
+            input_str += f"{unit = }"
+
+        if sector is None or sector == "":
+            self.sector = ""
+        else:
+            self.sector = sector
+            input_str += f", {sector = }"
+
+
+        logger.info(f"{series} specific inputs: {input_str}")
+
+    def download_data(self):
+        """
+        It downloads data and its meta data from the IMF web server, and saves it to a csv file.
+
+        Returns:
+          The data is being returned as a pandas dataframe.
+        """
+        if self.get_series_names() is None:
+            return None
+
+        self.get_dimensions()
+
+        self.validate_inputs()
+
+        self.meta_df = self.download_meta()
+        if self.meta_df is None:
+            return None
+
+        base = f'{self.url}CompactData/{self.series}/'
+        time = ''
+        if self.start_time is not None and self.end_time is not None:
+            time = f'.?startPeriod={self.start_time}&endPeriod={self.end_time}'
+        if self.start_time is None and self.end_time is not None:
+            time = f'.?endPeriod={self.end_time}'
+        if self.start_time is not None and self.end_time is None:
+            time = f'.?startPeriod={self.start_time}'
+
+        self.data_df = pd.DataFrame()
+        # sometimes a big list of country codes results in an error, try splitting it into 2 lists and running this and next cell twice.
+        dcn_sa = list(self.meta_df["ID"].values)
+
+        ## TODO: change to lowercase
+        if self.sector != "":
+            df_temp = self.dim_dict["CL_SECTOR_GFSR"]
+            try:
+                self.sector = df_temp.loc[df_temp['DESCRIPTION.TEXT'] == self.sector, 'VALUE'].iloc[0]
+            except:
+                logger.warning(f"The given sector attribute does not match the metadata: {self.sector}. Defaulting to None.")
+                self.sector = ""
+
+        if self.unit != "":
+            df_temp = self.dim_dict["CL_UNIT_GFSR"]
+            try:
+                self.unit = df_temp.loc[df_temp['DESCRIPTION.TEXT'] == self.unit, 'VALUE'].iloc[0]
+            except:
+                logger.warning(f"The given unit attribute does not match the metadata: {self.unit}. Defaulting to None.")
+                self.unit = ""
+
+        logger.debug(f"sector id lookup (now self.sector) {self.sector}")
+        logger.debug(f"unit id lookup (now self.unit) {self.unit}")
+
+        logger.info(f"dcn_sa is {dcn_sa}")
+
+        temp = pd.DataFrame()
+
+        if self.countries[0] == '':
+            dcn_sa_list = [dcn_sa[x:x + 1] for x in range(0, len(dcn_sa), 1)]
+        else:
+            dcn_sa_list = [dcn_sa[x:x + self._max_indicators] for x in range(0, len(dcn_sa), self._max_indicators)]
+
+        logger.info(f"dcn_sa_list is {dcn_sa_list}")
+
+        for cont, indicators in itertools.product(self.countries,  dcn_sa_list):
+            logger.debug("Current country", cont)
+
+            # url = f"{base}{self.period}.{cont}{'.'*(self._indicator_dim_position-1)}{'+'.join(indicators)}{time}"
+            # logger.info(f"URL is {url}")
+            url = f"{base}{self.period}.{cont}.{self.sector}.{self.unit}.{'+'.join(indicators)}{time}"
+            logger.debug(f"URL is {url}")
+            # url = f"{base}{period}..{'+'.join(indicators)}.{time}"
+
+            # logger.debug(f"{url_v2 = }")
+            json = self.repeat_request(url)
+            if json is not None:
+                try:
+                    response = json
+                    series = response['CompactData']['DataSet']['Series']
+                    temp_df = pd.DataFrame()
+
+                    if isinstance(series, dict):
+                        if isinstance(series.get("Obs"), list):
+                            temp_df = pd.concat([temp_df, pd.json_normalize(series.get("Obs"))])
+                        for k in series.keys():
+                            if k != "Obs":
+                                temp_df[k] = series.get(k)
+
+                        if temp_df.shape[0] > 0:
+                            temp_df = temp_df.rename(
+                                columns={
+                                    '@OBS_VALUE': 'Value',
+                                    '@INDICATOR': 'ID',
+                                    '@INDICATOR_CODE': 'ID',
+                                    '@REF_AREA': 'Country'
+                                }
+                            )
+                            temp_df['Period'] = pd.to_datetime(
+                                [row.replace('-', '') for row in temp_df['@TIME_PERIOD']]
+                            )
+                            temp_df.drop('@TIME_PERIOD', axis=1, inplace=True)
+
+                            temp = pd.concat([temp, temp_df], axis=0)
+                    elif isinstance(series, list):
+                        series_len = len(series)
+                        for n in range(0, series_len):
+                            temp_dic = series[n].get('Obs')
+
+                            temp_df = pd.DataFrame.from_dict(
+                                temp_dic
+                            ).rename(
+                                columns={
+                                    '@OBS_VALUE': 'Value',
+                                    '@OBS_STATUS': 'Status'
+                                }
+                            )
+
+                            for k in series[n].keys():
+                                if k != "Obs":
+                                    temp_df[k] = series[n].get(k)
+
+                            if temp_df.shape[0] > 0:
+                                temp_df = temp_df.rename(
+                                    columns={
+                                        '@OBS_VALUE': 'Value',
+                                        '@INDICATOR': 'ID',
+                                        '@REF_SECTOR': 'ID',  # for GFSR
+                                        '@REF_AREA': 'Country'
+                                    }
+                                )
+                                temp_df['Period'] = pd.to_datetime(
+                                    [row.replace('-', '') for row in temp_df['@TIME_PERIOD']]
+                                )
+                                temp_df.drop('@TIME_PERIOD', axis=1, inplace=True)
+
+                                temp = pd.concat([temp, temp_df], axis=0)
+                except:
+                    logger.warning(f"Request for IMF data failed for area code, {cont}: {url = }.")
+                    pass
+
+        is_output = True
+        if temp.shape[0] == 0:
+            csv_filename, _ = self.gen_data_filename()
+            outfile_path = f"{self.outdir}{csv_filename}"
+            if path.exists(outfile_path):
+                temp = pd.read_csv(outfile_path)
+                logger.warning(f"Read data from historical file {outfile_path}")
+                if "Description" in temp.columns:
+                    temp = temp.drop(['Description'], axis=1)
+                is_output = False
+            else:
+                logger.warning(f"No data has been downloaded.")
+                return pd.DataFrame()
+
+        self.data_df = pd.concat([temp, self.data_df], axis=0)
+        self.data_df = pd.merge(self.data_df, self.meta_df, on="ID", how="left")
+
+        # deduplicate
+        self.data_df = self.data_df.drop_duplicates(keep='last')
+
+        # sorting
+        self.data_df.sort_values(by=["ID", "Country", 'Period'], axis=0, inplace=True)
+        logger.debug(f"data_df.shape = {self.data_df.shape}")
+
+        # remove special characters in column names
+        self.data_df = self.clean_column_names(self.data_df)
+
+        if is_output:
+            self.output_data(is_gen_filename=True)
+
+        return self.data_df
+
 
 
 class COFOG(IMF):
@@ -929,6 +1123,25 @@ class HPDD(IMF):
 #
 if __name__ == '__main__':
     ifs = IFS(search_terms=["Gross Domestic Product, Real"], countries=["US", "DE"],
-              period='Q', start_date="2000", end_date="2022")
+
+              period='Q', start_date="2004", end_date="2022", outdir=f"..{os.sep}..{os.sep}out{os.sep}")
+
     df = ifs.download_data()
-    df_summary = ifs.describe_data()
+    # df_summary = ifs.describe_data()
+
+    # gfsr = GFSR(search_terms=["social contributions"], countries=["US"], period='A', start_date="2000", end_date="2022")
+    # df = gfsr.download_data()
+    # print(df.shape)
+    # df_summary = gfsr.describe_data()
+    # print(df_summary)
+    # meta_df = gfsr.get_meta()
+    # print(meta_df.shape)
+
+    gfsr = GFSR(search_terms=["social contributions"], countries=["US"], period='A', start_date="2000", end_date="2020",
+                sector="S1311")
+    df = gfsr.download_data()
+    print(df)
+    # df_summary = gfsr.describe_data()
+    # print(df_summary)
+    # meta_df = gfsr.get_meta()
+    # print(meta_df)
