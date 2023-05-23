@@ -1,10 +1,10 @@
 # Extraction of International Financial Statistics data from the IMF
 
-The example below retrieves quarterly (period: Q) Seasonally Adjusted Real Gross Domestic Product (indicator: NGDP_R_SA_XDC) for the USA (country code: US), from the International Financial Statistics (IFS) series using the **imfdatapy** package. The function call returns the observation values, and the time period for each value (in the format YYYY-MM-DD).
+The example below retrieves quarterly (period: Q) Seasonally Adjusted Real Gross Domestic Product (indicator: NGDP_R_SA_XDC) for the USA (country code: US), from the International Financial Statistics (IFS) series using the **IMFDataPy** package. The function call returns the observation values, and the time period for each value (in the format YYYY-MM-DD).
 
-First, we begin with loading the **imfdatapy** library for data extraction and from the IMF and **pandas** for data manipulation.
+First, we begin with loading the **IMFDataPy** library for data extraction and from the IMF and **pandas** for data manipulation.
 
-##  `**imfdatapy**` package 
+##  `**IMFDataPy**` package 
 
 Source code foris available on [Github](https://github.com/Economic-and-Financial-Data-Discovery/imfdatapy).
 

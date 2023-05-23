@@ -1,4 +1,4 @@
-# imfdatapy
+# IMFDataPy
 
 A package for data discovery and extraction from the International Monetary Fund (IMF)!
 This repository contains Python source code and Jupyter notebooks with examples on how to extract data from the IMF.
@@ -11,7 +11,7 @@ This repository contains Python source code and Jupyter notebooks with examples 
 
 ## Usage
 
-`imfdatapy` can be used to search through and extract data as follows. The examples below show how to search through the IFS (International Financial Statistics) and BOP (Balance of Payments) using ```serach_terms``` and download all the data with matching economic indicator names.
+`IMFDataPy` can be used to search through and extract data as follows. The examples below show how to search through the IFS (International Financial Statistics) and BOP (Balance of Payments) using ```serach_terms``` and download all the data with matching economic indicator names.
 
 ```python
 from imfdatapy.imf import *

@@ -40,11 +40,9 @@ If you are proposing a feature:
 
 ## Get Started!
 
-Ready to contribute? Here's how to set up `imfdatapy` for local development.
-
-TODO
-
-1. Download a copy of `imfdatapy` locally.
+Ready to contribute? Here's how to set up `IMFDataPy` for local development.
+ 
+1. Download a copy of `IMFDataPy` locally.
 
   ```console
   $ git clone https://github.com/Economic-and-Financial-Data-Discovery/imfdatapy.git
@@ -52,7 +50,7 @@ TODO
   $	git checkout develop
   ```
 
-2. Install `imfdatapy` using `conda`:
+2. Install `IMFDataPy` using `conda`:
 
     ```console
     $ conda env create --file environment.yml
@@ -82,5 +80,5 @@ Before you submit a pull request, check that it meets these guidelines:
 
 ## Code of Conduct
 
-Please note that the `imfdatapy` project is released with a
+Please note that the `IMFDataPy` project is released with a
 Code of Conduct. By contributing to this project you agree to abide by its terms.

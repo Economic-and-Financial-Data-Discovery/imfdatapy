@@ -1,4 +1,4 @@
-# **`imfdatapy`** Architecture
+# **`IMFDataPy`** Architecture
 
 
 ```python

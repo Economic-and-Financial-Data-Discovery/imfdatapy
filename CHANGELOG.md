@@ -11,4 +11,4 @@
 
 ## v0.1.0 (24/11/2022)
 
-- First release of `imfdatapy`! Reserve name on PyPi.
+- First release of `IMFDataPy`! Reserve name on PyPi.
