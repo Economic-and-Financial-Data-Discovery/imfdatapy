@@ -1,14 +1,14 @@
-# Required
 version: 2
 
-# Image to use
 build:
-  image: testing
+  os: "ubuntu-20.04"
+  tools:
+    python: "mambaforge-4.10"
+  jobs:
+    post_install:
+      - "pip install -e ."
 
-# Configuration
-python:
-  version: 3.9
-  install:
-    - requirements: docs/requirements.txt
-    - method: pip
-      path: .
+conda:
+  environment: environment.yml
+
+formats: all

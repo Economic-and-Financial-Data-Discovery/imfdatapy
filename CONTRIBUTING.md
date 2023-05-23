@@ -47,13 +47,19 @@ TODO
 1. Download a copy of `imfdatapy` locally.
 
   ```console
-  $ make install_imf
+  $ git clone https://github.com/Economic-and-Financial-Data-Discovery/imfdatapy.git
+  $	cd imfdatapy
+  $	git checkout develop
   ```
 
-2. Install `imfdatapy` using `poetry`:
+2. Install `imfdatapy` using `conda`:
 
     ```console
-    $ poetry install
+    $ conda env create --file environment.yml
+    $ conda activate imfdatapy
+    $ jupyter nbextensions_configurator enable --user
+	$ python -m ipykernel install --user --name=imfdatapy
+	$ pip install -e .
     ```
 
 3. Use `git` (or similar) to create a branch for local development and make your changes:

@@ -1,1 +1,1 @@
-from imf import *
+from imfdatapy import imf

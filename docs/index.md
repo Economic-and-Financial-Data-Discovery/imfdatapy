@@ -1,13 +1,13 @@
-```{include} ../README.md
-```
+`**imfdatapy` Table of Contents
+================================
 
 ```{toctree}
-:maxdepth: 1
-:hidden:
+:maxdepth: 2
 
-example.ipynb
+readme.md
 changelog.md
 contributing.md
 conduct.md
+demo.md
 autoapi/index
 ```

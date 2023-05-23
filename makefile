@@ -1,14 +1,17 @@
+nbdir = docs/demo_md/
 
-uninstall_imf:
+uninstall_imfdatapy:
 	cd ..
-	rm -fr IMF_data_discovery
+	rm -fr imfdatapy
 	conda deactivate
-	conda remove --name imf --all
+	conda remove --name imfdatapy --all
 
-install_imf:
+download_imfdatapy:
 	git clone https://github.com/Economic-and-Financial-Data-Discovery/imfdatapy.git
 	cd imfdatapy
 	git checkout develop
+
+install_imf:
 	conda env create --file environment.yml
 	conda activate imfdatapy
 	jupyter nbextensions_configurator enable --user
@@ -22,15 +25,45 @@ _uml:
 	mv classes.png docs/imfdatapy_classes_members.png
 
 
+_doc: #  gets run by docs/conf.py so we don't need to commit files in $(nbdir)
+	# Remove and make directory
+	@rm -r -f $(nbdir)
+	@mkdir $(nbdir)
+	@for f in demo/imfdatapy*.ipynb; do \
+		echo "#\tConverting $$f"; \
+		jupyter nbconvert --to markdown --output-dir='$(nbdir)' $$f 2>/dev/null; \
+	done
+	#jupyter nbconvert --to markdown --output-dir='$(nbdir)'  demo/imfdatapy_demo.ipynb
+	#jupyter nbconvert --to markdown --output-dir='$(nbdir)'  demo/imfdatapy_IFS_GDP_example.ipynb
+
+_doc_clean:
+	@cd docs && make clean
 
 doc_html:
-	sphinx-build -b html doc doc/build
+	@cd docs && make html
 
 doc_pdf:
-	sphinx-build -b latex doc doc/build -W --keep-going  2>/dev/null
-	cd doc/build/
-	latex doc/build/imfdatapy.tex
-	cd ../..
+	@cd docs && make latexpdf
 
-tests:
-	python -W ignore -m coverage run --append --source=./ -m unittest discover -s tests/ 1>/dev/null
+doc_epub:
+	@cd docs && make epub
+
+docs: _doc_clean _doc _uml doc_html doc_pdf doc_epub
+
+fasttests:
+	coverage run -m pytest tests/test_dot.py
+
+longtests:
+    #coverage run -m pytest
+	coverage run -m pytest tests/test_ifs.py
+
+coverage:
+	@echo "\nCode coverage"
+	@rm -r -f htmlcov
+	python -m coverage report -m
+	coverage html
+
+fasttests_cov: fasttests coverage
+
+
+longtests_cov: longtests coverage

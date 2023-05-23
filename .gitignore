@@ -145,7 +145,4 @@ dmypy.json
 .idea/misc.xml
 .idea/Stock-Data-Analysis.iml
 
-# Irina's local ignores
-ignore_package
-_src
-
+*.csv

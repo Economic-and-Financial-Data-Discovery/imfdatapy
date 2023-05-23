@@ -1,0 +1,101 @@
+---
+title: "Overview of existing R packages to retrieve IMF data"
+output: html_document
+date: '2022-11-27'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# IMFData
+
+## Install from archive
+
+Dependencies might need to be installed first.
+
+```{r}
+packageurl <- "https://cran.r-project.org/src/contrib/Archive/IMFData/IMFData_0.1.0.tar.gz"
+install.packages(packageurl, repos=NULL, type="source")
+```
+
+```{r}
+library(IMFData)
+```
+
+### DataflowMethod
+
+```{r}
+#availableDB <- DataflowMethod()
+
+# error
+```
+### DataStructureMethod
+
+```{r}
+IFS.available.codes <- DataStructureMethod("IFS")
+```
+
+```{r}
+names(IFS.available.codes)
+```
+
+```{r}
+CodeSearch(IFS.available.codes, "CL_INDICATOR_IFS", "GDP")
+```
+
+```{r}
+databaseID <- "IFS"
+startdate = "2010-01-01"
+enddate = "2023-12-31"
+checkquery = FALSE
+
+queryfilter <- list(CL_FREA = "", CL_AREA_IFS = "US", CL_INDICATOR_IFS = "NGDP_R_NSA_XDC")
+
+GR.NGDP.query <- CompactDataMethod(databaseID, queryfilter, startdate, enddate, 
+    checkquery)
+```
+
+
+```{r}
+GR.NGDP.query$Obs[[1]]
+```
+
+# imfr 
+
+## Install latest version from archive
+
+Dependencies might need to be installed first.
+
+```{r}
+packageurl <- "https://cran.r-project.org/src/contrib/Archive/imfr/imfr_0.1.9.tar.gz"
+install.packages(packageurl, repos=NULL, type="source")
+```
+
+```{r}
+library(imfr)
+```
+
+```{r}
+library(imfr)
+
+real_ex <- imf_data(database_id = 'IFS', indicator = 'EREER_IX',
+                    country = c('CN', 'GB'), freq = 'A',
+                    start = 2013, end = current_year())
+```
+
+```{r}
+real_ex
+```
+
+```{r}
+data_list <- imf_data(database_id = "DOT", indicator = "TXG_FOB_USD", 
+                      country = "US", return_raw = TRUE)
+```
+
+```{r}
+data_df <- data_list$CompactData$DataSet$Series
+
+names(data_df)
+```
+

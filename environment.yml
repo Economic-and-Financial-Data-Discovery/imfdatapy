@@ -11,8 +11,18 @@ dependencies:
   - jupyter=1.0.0
   - jupyterlab=3.4.4
   - coverage=6.3.2
+  - nbconvert==7.2.9
+  - pip=22.2.2
   - pytest=7.1.2
+  - pytest-cov=4.0.0
   - pylint=2.14.5
   - requests=2.28.1
   - pyquery=1.4.3
   - graphviz=2.50.0
+  - sphinx=5.3.0
+  - sphinx_rtd_theme=1.1.1
+  - pip:
+    - myst-nb==0.16.0
+    - sphinx-autoapi==2.0.1
+    - jupyter-nbextensions_configurator==0.6.1
+    - jupyter_contrib_nbextensions==0.7.0
