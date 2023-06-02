@@ -1,6 +1,10 @@
 # Changelog
 
 <!--next-version-placeholder-->
+## v1.0.0 (02/05/2023)
+
+- First stable version release.
+
 ## v0.1.5 (26/11/2022)
 
 - Resolve dependecies issue and mkdir before pandas.to_csv.
