@@ -1,4 +1,5 @@
 # imfdatapy
+[![DOI](https://zenodo.org/badge/565568140.svg)](https://zenodo.org/badge/latestdoi/565568140)
 
 A package for data discovery and extraction from the International Monetary Fund (IMF)!
 This repository contains Python source code and Jupyter notebooks with examples on how to extract data from the IMF.
