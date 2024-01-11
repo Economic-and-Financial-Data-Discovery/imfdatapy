@@ -4,6 +4,11 @@
 A package for data discovery and extraction from the International Monetary Fund (IMF)!
 This repository contains Python source code and Jupyter notebooks with examples on how to extract data from the IMF.
 
+## Manuscript
+[IMFDataPy: A Python Package for IMF Data Discovery and Extraction](https://github.com/Economic-and-Financial-Data-Discovery/imfdatapy/blob/master/docs/imfdatapy.pdf)
+
+This manuscript provides a comprehensive overview of the project, including its objectives, design, and examples. 
+
 ## Installation
 
 ```bash
