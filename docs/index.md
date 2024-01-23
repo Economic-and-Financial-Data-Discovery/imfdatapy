@@ -1,4 +1,4 @@
-`**IMFDataPy` Table of Contents
+`**IMFDataPy**` Table of Contents
 ================================
 
 ```{toctree}
